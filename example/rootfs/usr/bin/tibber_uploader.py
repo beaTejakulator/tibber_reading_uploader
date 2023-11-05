@@ -21,7 +21,7 @@ class TibberUploader:
         _LOGGER.info("Starting the upload process...")
         
         # Hier verwenden wir die Supervisor API, um die aktuelle Zeit von Home Assistant zu erhalten
-        hass_url = "http://supervisor/core/api/states/sensor.date__time"
+        hass_url = "http://supervisor/core/api/states/sensor.date_time"
         headers = {
             "Authorization": f"Bearer {self.supervisor_token}",
             "Content-Type": "application/json",
