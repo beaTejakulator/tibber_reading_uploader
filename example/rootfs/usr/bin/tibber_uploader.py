@@ -16,7 +16,7 @@ class TibberUploader:
         self.meter_sensor = meter_sensor
         self.supervisor_token = os.getenv('SUPERVISOR_TOKEN')
 
-    def upload_reading(self, reading: int):
+    def upload_reading(self):
         """Upload the meter reading to Tibber."""
         _LOGGER.info("Starting the upload process...")
         
@@ -32,6 +32,16 @@ class TibberUploader:
             _LOGGER.info(f"Current time from Home Assistant retrieved: {reading_date}")
         else:
             _LOGGER.error("Failed to get current time from Home Assistant")
+            return
+
+        # Holen Sie den Zählerstand vom angegebenen Sensor
+        meter_reading_url = f"http://supervisor/core/api/states/{self.meter_sensor}"
+        meter_reading_response = requests.get(meter_reading_url, headers=headers)
+        if meter_reading_response.status_code == 200:
+            meter_reading = meter_reading_response.json()['state']
+            _LOGGER.info(f"Meter reading retrieved: {meter_reading}")
+        else:
+            _LOGGER.error("Failed to get meter reading from Home Assistant")
             return
 
         # Jetzt führen wir die Mutation auf der Tibber API durch
@@ -74,7 +84,7 @@ class TibberUploader:
                 "meterId": self.meter_id,
                 "readingDate": reading_date,
                 "registerId": self.register_id,
-                "value": reading,
+                "value": int(meter_reading),  # Konvertieren Sie den Zählerstand in einen Integer
             },
         }
 
@@ -90,15 +100,6 @@ if __name__ == "__main__":
     meter_id = os.getenv('METER_ID')
     register_id = os.getenv('REGISTER_ID')
     meter_sensor = os.getenv('METER_SENSOR')
-    
-    # Versuchen Sie, den Zählerstand als Umgebungsvariable zu lesen
-    reading_str = os.getenv('READING')
-    if reading_str is None:
-        _LOGGER.error("Environment variable 'READING' not found")
-    else:
-        try:
-            reading = int(reading_str)
-            uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
-            uploader.upload_reading(reading)
-        except ValueError:
-            _LOGGER.error(f"Invalid meter reading value: {reading_str}")
+
+    uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
+    uploader.upload_reading()
