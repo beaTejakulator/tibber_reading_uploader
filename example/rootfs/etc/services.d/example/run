@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Start the Tibber Uploader service
+# ==============================================================================
 
-# Starten Sie hier Ihre Hauptanwendung
-python /tibber_uploader.py
+# Start your main application
+python3 /usr/bin/tibber_uploader.py
