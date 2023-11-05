@@ -19,6 +19,6 @@ options:
 schema:
   token: "str"
   meter_sensor: "str"
-image: "ghcr.io/beatejakulator/tibber-reading-uploader:{arch}"
+image: "ghcr.io/beatejakulator/{arch}-tibber-reading-uploader"
 
 
