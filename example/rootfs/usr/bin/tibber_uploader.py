@@ -1,8 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env python3
 
 import logging
 import aiohttp
-
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
