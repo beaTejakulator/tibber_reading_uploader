@@ -6,11 +6,9 @@ FROM $BUILD_FROM
 ENV LANG C.UTF-8
 
 # Installieren Sie notwendige Pakete und Werkzeuge
-RUN apt-get update && apt-get install -y \
-    libudev-dev \
-    curl \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache \
+    udev \
+    curl
 
 # Installieren Sie Tempio für die Verwendung in Home Assistant Add-ons
 ARG TEMPIO_VERSION BUILD_ARCH
