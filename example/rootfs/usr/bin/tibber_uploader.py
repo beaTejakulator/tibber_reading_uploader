@@ -90,7 +90,15 @@ if __name__ == "__main__":
     meter_id = os.getenv('METER_ID')
     register_id = os.getenv('REGISTER_ID')
     meter_sensor = os.getenv('METER_SENSOR')
-    reading = int(os.getenv('READING'))  # Dies sollte der tatsächliche Zählerstand sein
-
-    uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
-    uploader.upload_reading(reading)
+    
+    # Versuchen Sie, den Zählerstand als Umgebungsvariable zu lesen
+    reading_str = os.getenv('READING')
+    if reading_str is None:
+        _LOGGER.error("Environment variable 'READING' not found")
+    else:
+        try:
+            reading = int(reading_str)
+            uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
+            uploader.upload_reading(reading)
+        except ValueError:
+            _LOGGER.error(f"Invalid meter reading value: {reading_str}")
