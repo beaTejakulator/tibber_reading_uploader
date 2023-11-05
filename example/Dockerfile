@@ -12,6 +12,10 @@ RUN apk add --no-cache \
     python3 \
     py3-pip
 
+# Installieren Sie Python-Module aus der requirements.txt-Datei
+COPY requirements.txt /
+RUN pip3 install --no-cache-dir -r /requirements.txt
+
 # Installieren Sie Tempio für die Verwendung in Home Assistant Add-ons
 ARG TEMPIO_VERSION BUILD_ARCH
 RUN \
