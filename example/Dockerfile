@@ -18,12 +18,12 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Kopieren Sie die Add-on-Quelldateien in das Arbeitsverzeichnis
-COPY tibber_uploader.py ./
+COPY rootfs/usr/bin/tibber_uploader.py ./
 COPY sensor.py ./
-COPY run.sh ./
+COPY rootfs/etc/services.d/example/run ./
 
 # Setzen Sie die Berechtigungen für das Startskript
-RUN chmod a+x /run.sh
+RUN chmod a+x /run
 
 # Definieren Sie das Startkommando
-CMD [ "./run.sh" ]
+CMD [ "./run" ]
