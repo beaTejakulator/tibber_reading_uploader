@@ -10,7 +10,11 @@ RUN apk add --no-cache \
     udev \
     curl \
     python3 \
-    py3-pip
+    py3-pip \
+    gcc \
+    musl-dev \
+    python3-dev \
+    libffi-dev
 
 # Installieren Sie Python-Module aus der requirements.txt-Datei
 COPY requirements.txt /
