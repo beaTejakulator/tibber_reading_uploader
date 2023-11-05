@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Kopieren Sie die Add-on-Quelldateien in das Arbeitsverzeichnis
 COPY rootfs/usr/bin/tibber_uploader.py ./
-COPY example/rootfs/usr/bin/sensor.py ./
+COPY rootfs/usr/bin/sensor.py ./
 COPY rootfs/etc/services.d/example/run ./
 
 # Setzen Sie die Berechtigungen für das Startskript
