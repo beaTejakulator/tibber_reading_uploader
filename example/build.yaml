@@ -6,9 +6,11 @@ build_from:
   armv7: "ghcr.io/home-assistant/armv7-base:3.15"
   i386: "ghcr.io/home-assistant/i386-base:3.15"
 labels:
-  org.opencontainers.image.title: "Home Assistant Add-on: Example add-on"
-  org.opencontainers.image.description: "Example add-on to use as a blueprint for new add-ons."
-  org.opencontainers.image.source: "https://github.com/home-assistant/addons-example"
-  org.opencontainers.image.licenses: "Apache License 2.0"
+  org.opencontainers.image.title: "Home Assistant Add-on: Tibber Reading Uploader"
+  org.opencontainers.image.description: "Ein Add-on, um Zählerstände zu Tibber hochzuladen."
+  org.opencontainers.image.source: "https://github.com/beaTejakulator/tibber_reading_uploader"
+  org.opencontainers.image.licenses: "MIT"
 args:
-  TEMPIO_VERSION: "2021.09.0"
+  # Hier können Sie Build-Argumente definieren, die im Dockerfile verwendet werden.
+  # Zum Beispiel, wenn Sie eine Umgebungsvariable oder eine Version eines Pakets festlegen möchten.
+  # Wenn Sie keine speziellen Build-Argumente haben, können Sie diesen Abschnitt entfernen.
