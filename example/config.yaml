@@ -1,9 +1,9 @@
 # https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
-name: Example add-on
-version: "1.2.0"
-slug: example
-description: Example add-on
-url: "https://github.com/home-assistant/addons-example/tree/main/example"
+name: Tibber Reading Uploader
+version: "1.0.0"
+slug: tibber-reading-uploader
+description: Uploads meter readings to Tibber
+url: "https://github.com/beaTejakulator/tibber_reading_uploader"
 arch:
   - armhf
   - armv7
@@ -14,7 +14,10 @@ init: false
 map:
   - share:rw
 options:
-  message: "Hello world..."
+  token: ""
+  meter_sensor: ""
 schema:
-  message: "str?"
-image: "ghcr.io/home-assistant/{arch}-addon-example"
+  token: "str"
+  meter_sensor: "str"
+image: "ghcr.io/home-assistant/{arch}-addon-tibber-reading-uploader"
+
