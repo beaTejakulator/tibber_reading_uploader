@@ -1,29 +1,29 @@
-# Verwenden Sie das offizielle Python-Image als Basis
-FROM python:3.8
+# Verwenden Sie das Basisimage, das von der Build-Umgebung bereitgestellt wird
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
 # Setzen Sie Umgebungsvariablen
 ENV LANG C.UTF-8
 
-# Setzen Sie das Arbeitsverzeichnis im Container
-WORKDIR /usr/src/app
-
-# Installieren Sie Abhängigkeiten für Home Assistant Add-ons
+# Installieren Sie notwendige Pakete und Werkzeuge
 RUN apt-get update && apt-get install -y \
     libudev-dev \
+    curl \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Kopieren Sie die Anforderungsdatei und installieren Sie die Python-Abhängigkeiten
-COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+# Installieren Sie Tempio für die Verwendung in Home Assistant Add-ons
+ARG TEMPIO_VERSION BUILD_ARCH
+RUN \
+    curl -sSLf -o /usr/bin/tempio \
+    "https://github.com/home-assistant/tempio/releases/download/${TEMPIO_VERSION}/tempio_${BUILD_ARCH}" \
+    && chmod a+x /usr/bin/tempio
 
-# Kopieren Sie die Add-on-Quelldateien in das Arbeitsverzeichnis
-COPY rootfs/usr/bin/tibber_uploader.py ./
-COPY rootfs/usr/bin/sensor.py ./
-COPY rootfs/etc/services.d/example/run ./
+# Kopieren Sie das rootfs-Verzeichnis in das Image
+COPY rootfs /
 
-# Setzen Sie die Berechtigungen für das Startskript
-RUN chmod a+x /run
+# Stellen Sie sicher, dass das Startskript ausführbar ist
+RUN chmod a+x /etc/services.d/example/run
 
 # Definieren Sie das Startkommando
-CMD [ "./run" ]
+CMD [ "/etc/services.d/example/run" ]
