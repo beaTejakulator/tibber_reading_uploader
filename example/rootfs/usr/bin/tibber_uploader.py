@@ -3,8 +3,9 @@
 import logging
 import os
 import requests
-from datetime import datetime
 
+# Konfigurieren Sie das Logging
+logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
 class TibberUploader:
@@ -17,6 +18,8 @@ class TibberUploader:
 
     def upload_reading(self, reading: int):
         """Upload the meter reading to Tibber."""
+        _LOGGER.info("Starting the upload process...")
+        
         # Hier verwenden wir die Supervisor API, um die aktuelle Zeit von Home Assistant zu erhalten
         hass_url = "http://supervisor/core/api/states/sensor.date__time"
         headers = {
@@ -26,6 +29,7 @@ class TibberUploader:
         response = requests.get(hass_url, headers=headers)
         if response.status_code == 200:
             reading_date = response.json()['state']
+            _LOGGER.info(f"Current time from Home Assistant retrieved: {reading_date}")
         else:
             _LOGGER.error("Failed to get current time from Home Assistant")
             return
@@ -78,4 +82,15 @@ class TibberUploader:
         if tibber_response.status_code == 200:
             _LOGGER.info("Meter reading uploaded successfully")
         else:
-            _LOGGER.error("Failed to upload meter reading: %s", tibber_response.status_code)
+            _LOGGER.error(f"Failed to upload meter reading: {tibber_response.status_code} - {tibber_response.text}")
+
+if __name__ == "__main__":
+    # Hier sollten Sie die Werte durch die tatsächlichen Werte ersetzen, die Sie verwenden möchten
+    token = os.getenv('TIBBER_TOKEN')
+    meter_id = os.getenv('METER_ID')
+    register_id = os.getenv('REGISTER_ID')
+    meter_sensor = os.getenv('METER_SENSOR')
+    reading = int(os.getenv('READING'))  # Dies sollte der tatsächliche Zählerstand sein
+
+    uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
+    uploader.upload_reading(reading)
