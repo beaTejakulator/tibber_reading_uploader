@@ -8,7 +8,9 @@ ENV LANG C.UTF-8
 # Installieren Sie notwendige Pakete und Werkzeuge
 RUN apk add --no-cache \
     udev \
-    curl
+    curl \
+    python3 \
+    py3-pip
 
 # Installieren Sie Tempio für die Verwendung in Home Assistant Add-ons
 ARG TEMPIO_VERSION BUILD_ARCH
