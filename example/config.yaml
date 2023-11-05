@@ -3,7 +3,7 @@ name: Tibber Reading Uploader
 version: "1.0.0"
 slug: tibber-reading-uploader
 description: Uploads meter readings to Tibber
-url: "https://github.com/beaTejakulator/tibber_reading_uploader"
+url: "https://github.com/beaTejakulator/tibber_reading_uploader/tree/main/example"
 arch:
   - armhf
   - armv7
