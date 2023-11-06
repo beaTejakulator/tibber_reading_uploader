@@ -16,6 +16,11 @@ class TibberUploader:
         self.meter_sensor = meter_sensor
         self.supervisor_token = os.getenv('SUPERVISOR_TOKEN')
 
+        # Check if the METER_SENSOR environment variable is set
+        if not self.meter_sensor:
+            _LOGGER.error('The METER_SENSOR environment variable is not set.')
+            raise ValueError('The METER_SENSOR environment variable is not set.')
+
     def upload_reading(self):
         """Upload the meter reading to Tibber."""
         _LOGGER.info("Starting the upload process...")
@@ -100,6 +105,11 @@ if __name__ == "__main__":
     meter_id = os.getenv('METER_ID')
     register_id = os.getenv('REGISTER_ID')
     meter_sensor = os.getenv('METER_SENSOR')
+
+    # Check if the METER_SENSOR environment variable is set
+    if not meter_sensor:
+        _LOGGER.error('The METER_SENSOR environment variable is not set.')
+        raise ValueError('The METER_SENSOR environment variable is not set.')
 
     uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
     uploader.upload_reading()
