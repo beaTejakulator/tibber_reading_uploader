@@ -3,7 +3,7 @@
 # Set the METER_SENSOR environment variable
 # ==============================================================================
 export METER_SENSOR=$(bashio::config 'meter_sensor')
-export TOKEN=$(bashio::config 'token')
+# export TOKEN=$(bashio::config 'token')
 
 # Start the Tibber Uploader service
 python3 /usr/bin/tibber_uploader.py
