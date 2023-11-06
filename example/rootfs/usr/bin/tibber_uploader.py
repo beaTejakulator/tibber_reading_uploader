@@ -16,6 +16,9 @@ class TibberUploader:
         self.meter_sensor = meter_sensor
         self.supervisor_token = os.getenv('SUPERVISOR_TOKEN')
 
+        # Debugging statement to print the METER_SENSOR value
+        print(f'Debug: METER_SENSOR={self.meter_sensor}')
+
         # Check if the METER_SENSOR environment variable is set
         if not self.meter_sensor:
             _LOGGER.error('The METER_SENSOR environment variable is not set.')
@@ -105,6 +108,9 @@ if __name__ == "__main__":
     meter_id = os.getenv('METER_ID')
     register_id = os.getenv('REGISTER_ID')
     meter_sensor = os.getenv('METER_SENSOR')
+
+    # Debugging statement to print the METER_SENSOR value
+    print(f'Debug: METER_SENSOR={meter_sensor}')
 
     # Check if the METER_SENSOR environment variable is set
     if not meter_sensor:
