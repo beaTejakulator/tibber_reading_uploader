@@ -18,7 +18,7 @@ class TibberUploader:
         self.supervisor_token = os.getenv('SUPERVISOR_TOKEN')
 
         # Debugging statement to print the METER_SENSOR value
-        _LOGGER.debug(f'Debug: METER_SENSOR={self.meter_sensor}')
+        print(f'Debug: METER_SENSOR={self.meter_sensor}')
 
         # Check if the METER_SENSOR environment variable is set
         if not self.meter_sensor:
@@ -26,7 +26,7 @@ class TibberUploader:
             raise ValueError('The METER_SENSOR environment variable is not set.')
 
         # Debugging statement to print the token value
-        _LOGGER.debug(f'Debug: TOKEN={self.token}')
+        print(f'Debug: TOKEN={self.token}')
 
         # Check if the token is set
         if not self.token:
@@ -65,63 +65,150 @@ class TibberUploader:
         current_date = datetime.now().strftime('%Y-%m-%d')
         _LOGGER.info(f"Current date: {current_date}")
         
-        # Datum von gestern
+        # Datum von vor einem Tag
         yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
         _LOGGER.info(f"Yesterday's date: {yesterday_date}")
 
-        # Now perform the mutation to add the meter reading
-        tibber_mutation_url = "https://app.tibber.com/v4/gql"
-        tibber_mutation_data = {
+        # Tibber API-Abfrage für "meterId" und "registerId"
+        tibber_url = "https://app.tibber.com/v4/gql"
+        tibber_headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+        }
+        tibber_data = {
             "query": """
-                mutation AddMeterReadings($meterId: String!, $readingDate: String!, $registerId: String!, $value: Float!) {
+                query AccountInfo($readingsFromDate: String!, $readingsToDate: String!) {
                     me {
-                        addMeterReadings(
-                            meterId: $meterId,
-                            readingDate: $readingDate,
-                            readings: [
-                                {
-                                    id: $registerId,
-                                    value: $value
+                        id
+                        firstName
+                        lastName
+                        email
+                        meters {
+                            items {
+                                meter {
+                                    id
+                                    title
+                                    description
+                                    registers {
+                                        id
+                                    }
                                 }
-                            ]
-                        ) {
-                            success {
-                                inputTitle
-                                inputValue
-                                title
-                                descriptionHtml
-                                doneButtonText
                             }
-                            error {
-                                statusCode
-                                title
-                                message
+                        }
+                        homes {
+                            id
+                            address {
+                                addressText
+                                city
+                                postalCode
+                                country
+                            }
+                            currentMeter {
+                                id
+                                meterNo
+                                isUserRead
+                            }
+                            consumptionAnalysisItemsForUserReadMeter(from: $readingsFromDate, to: $readingsToDate, useDemoData: false) {
+                                from
+                                to
+                                meterReadingForCurrentMonthIsRecommended
+                                meterReadingForPreviousMonthIsRecommended
+                                meterReadings {
+                                    date
+                                    registers {
+                                        value
+                                    }
+                                }
                             }
                         }
                     }
                 }
             """,
             "variables": {
-                "meterId": self.meter_id,
-                "readingDate": reading_date,
-                "registerId": self.register_id,
-                "value": float(meter_reading)
+                "readingsFromDate": yesterday_date,
+                "readingsToDate": current_date
             },
         }
-        
-        # Debug-Ausgabe für die gesendeten Daten
-        _LOGGER.debug(f"Sending mutation to Tibber API with data: {tibber_mutation_data}")
 
-        # Senden Sie die Mutation-Anfrage an die Tibber API
-        tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_headers, json=tibber_mutation_data)
-        if tibber_mutation_response.status_code == 200:
-            _LOGGER.info("Meter reading uploaded successfully")
-            # Hier fügen wir die Ausgabe der vollständigen Antwort hinzu
-            _LOGGER.info(f"Full response from Tibber API: {tibber_mutation_response.json()}")
+        # Senden Sie die Anfrage an die Tibber API
+        tibber_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_data)
+        if tibber_response.status_code == 200:
+            _LOGGER.info("Data successfully fetched from Tibber API")
+            tibber_response_data = tibber_response.json()
+            
+            # Extrahieren Sie die meter_id und register_id dynamisch
+            homes = tibber_response_data['data']['me']['homes']
+            
+            # Angenommen, Sie möchten die meter_id und register_id des aktuellen Zählers extrahieren
+            for home in homes:
+                current_meter_id = home.get('currentMeter', {}).get('id')
+                if current_meter_id:
+                    _LOGGER.info(f"Found current meter_id: {current_meter_id}")
+                    # Hier wurde der Code zum Extrahieren der register_id entfernt
+                    self.meter_id = current_meter_id
+                    # Hier wurde die Zuweisung der register_id entfernt
+                    break
+            else:
+                _LOGGER.error("No current meter_id found in homes")
+                return  # Beenden Sie die Funktion, da kein weiterer Fortschritt möglich ist
+
+            # Now perform the mutation to add the meter reading
+            tibber_mutation_url = "https://app.tibber.com/v4/gql"
+            tibber_mutation_data = {
+                "query": """
+                    mutation AddMeterReadings($meterId: String!, $readingDate: String!, $registerId: String!, $value: Float!) {
+                        me {
+                            addMeterReadings(
+                                meterId: $meterId,
+                                readingDate: $readingDate,
+                                readings: [
+                                    {
+                                        id: $registerId,
+                                        value: $value
+                                    }
+                                ]
+                            ) {
+                                success {
+                                    inputTitle
+                                    inputValue
+                                    title
+                                    descriptionHtml
+                                    doneButtonText
+                                }
+                                error {
+                                    statusCode
+                                    title
+                                    message
+                                }
+                            }
+                        }
+                    }
+                """,
+                "variables": {
+                    "meterId": self.meter_id,
+                    "readingDate": reading_date,
+                    "registerId": self.register_id,
+                    "value": float(meter_reading)
+                },
+            }
+            
+            # Debug-Ausgabe für die gesendeten Daten
+            _LOGGER.debug(f"Sending mutation to Tibber API with data: {tibber_mutation_data}")
+
+            # Senden Sie die Mutation-Anfrage an die Tibber API
+            tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_headers, json=tibber_mutation_data)
+            if tibber_mutation_response.status_code == 200:
+                _LOGGER.info("Meter reading uploaded successfully")
+                # Hier fügen wir die Ausgabe der vollständigen Antwort hinzu
+                _LOGGER.info(f"Full response from Tibber API: {tibber_mutation_response.json()}")
+            else:
+                _LOGGER.error(f"Failed to upload meter reading: {tibber_mutation_response.status_code} - {tibber_mutation_response.text}")
+                # Hier fügen wir auch die Ausgabe der vollständigen Fehlerantwort hinzu
+                _LOGGER.error(f"Full error response from Tibber API: {tibber_mutation_response.json()}")
+
         else:
-            _LOGGER.error(f"Failed to upload meter reading: {tibber_mutation_response.status_code} - {tibber_mutation_response.text}")
-            # Hier fügen wir auch die Ausgabe der vollständigen Fehlerantwort hinzu
-            _LOGGER.error(f"Full error response from Tibber API: {tibber_mutation_response.json()}")
+            _LOGGER.error(f"Failed to fetch data from Tibber API: {tibber_response.status_code} - {tibber_response.text}")
+
 
 if __name__ == "__main__":
     # Hier sollten Sie die Werte durch die tatsächlichen Werte ersetzen, die Sie verwenden möchten
