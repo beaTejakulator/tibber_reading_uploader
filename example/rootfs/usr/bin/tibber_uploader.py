@@ -92,7 +92,7 @@ class TibberUploader:
                 "meterId": self.meter_id,
                 "readingDate": reading_date,
                 "registerId": self.register_id,
-                "value": int(meter_reading),  # Konvertieren Sie den Zählerstand in einen Integer
+                "value": float(meter_reading),  # Konvertieren Sie den Zählerstand in einen Integer
             },
         }
 
