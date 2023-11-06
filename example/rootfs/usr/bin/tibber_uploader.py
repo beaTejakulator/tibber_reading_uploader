@@ -57,6 +57,11 @@ class TibberUploader:
         if meter_reading_response.status_code == 200:
             meter_reading = meter_reading_response.json()['state']
             _LOGGER.info(f"Meter reading retrieved: {meter_reading}")
+
+            # Konvertieren Sie den Meterstand in eine Fließkommazahl und runden Sie ihn
+            meter_reading_value = float(meter_reading)
+            rounded_meter_reading = round(meter_reading_value)
+            _LOGGER.info(f"Rounded meter reading to nearest whole number: {rounded_meter_reading}")
         else:
             _LOGGER.error(f"Failed to get meter reading from Home Assistant: {meter_reading_response.status_code} - {meter_reading_response.text}")
             return
@@ -144,9 +149,7 @@ class TibberUploader:
                 current_meter_id = home.get('currentMeter', {}).get('id')
                 if current_meter_id:
                     _LOGGER.info(f"Found current meter_id: {current_meter_id}")
-                    # Hier wurde der Code zum Extrahieren der register_id entfernt
                     self.meter_id = current_meter_id
-                    # Hier wurde die Zuweisung der register_id entfernt
                     break
             else:
                 _LOGGER.error("No current meter_id found in homes")
@@ -188,7 +191,7 @@ class TibberUploader:
                     "meterId": self.meter_id,
                     "readingDate": reading_date,
                     "registerId": self.register_id,
-                    "value": float(meter_reading)
+                    "value": rounded_meter_reading  # Verwenden Sie den gerundeten Wert
                 },
             }
             
@@ -199,11 +202,9 @@ class TibberUploader:
             tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_headers, json=tibber_mutation_data)
             if tibber_mutation_response.status_code == 200:
                 _LOGGER.info("Meter reading uploaded successfully")
-                # Hier fügen wir die Ausgabe der vollständigen Antwort hinzu
                 _LOGGER.info(f"Full response from Tibber API: {tibber_mutation_response.json()}")
             else:
                 _LOGGER.error(f"Failed to upload meter reading: {tibber_mutation_response.status_code} - {tibber_mutation_response.text}")
-                # Hier fügen wir auch die Ausgabe der vollständigen Fehlerantwort hinzu
                 _LOGGER.error(f"Full error response from Tibber API: {tibber_mutation_response.json()}")
 
         else:
