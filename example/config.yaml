@@ -13,6 +13,7 @@ arch:
 init: false
 homeassistant_api: true
 hassio_api: true
+host_network: true
 map:
   - share:rw
 options:
