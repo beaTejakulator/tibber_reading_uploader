@@ -85,8 +85,8 @@ class TibberUploader:
                 }
             """,
             "variables": {
-                "readingsFromDate": "2023-10-01",
-                "readingsToDate": "2023-10-31"
+                "readingsFromDate": yesterday_date,
+                "readingsToDate": current_date
             },
         }
         
