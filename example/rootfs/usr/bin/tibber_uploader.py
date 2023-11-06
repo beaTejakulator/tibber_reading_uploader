@@ -164,7 +164,7 @@ class TibberUploader:
             tibber_mutation_url = "https://app.tibber.com/v4/gql"
             tibber_mutation_data = {
                 "query": """
-                    mutation AddMeterReadings($meterId: ID!, $readingDate: String!, $registerId: ID!, $value: Float!) {
+                    mutation AddMeterReadings($meterId: String!, $readingDate: String!, $registerId: String!, $value: Float!) {
                         me {
                             addMeterReadings(
                                 meterId: $meterId,
@@ -193,19 +193,20 @@ class TibberUploader:
                     }
                 """,
                 "variables": {
-                    "meterId": self.meter_id,  # Ensure this is passed as an ID, not a string
+                    "meterId": self.meter_id,
                     "readingDate": reading_date,
-                    "registerId": self.register_id,  # Ensure this is passed as an ID, not a string
-                    "value": float(meter_reading),  # Convert the reading to float
+                    "registerId": self.register_id,
+                    "value": float(meter_reading)
                 },
             }
             
             # Send the mutation request to Tibber
             tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_headers, json=tibber_mutation_data)
-            if tibber_mutation_response.status_code == 200:
+            if tibber_mutation_response.status_code == 200 {
                 _LOGGER.info("Meter reading uploaded successfully")
-            else:
+            } else {
                 _LOGGER.error(f"Failed to upload meter reading: {tibber_mutation_response.status_code} - {tibber_mutation_response.text}")
+            }
 
 if __name__ == "__main__":
     # Hier sollten Sie die Werte durch die tatsächlichen Werte ersetzen, die Sie verwenden möchten
