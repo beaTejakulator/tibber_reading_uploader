@@ -206,7 +206,7 @@ class TibberUploader:
 
 if __name__ == "__main__":
     # Hier sollten Sie die Werte durch die tatsächlichen Werte ersetzen, die Sie verwenden möchten
-    token = os.getenv('TIBBER_TOKEN')
+    token = os.getenv('TOKEN')
     meter_id = os.getenv('METER_ID')
     register_id = os.getenv('REGISTER_ID')
     meter_sensor = os.getenv('METER_SENSOR')
