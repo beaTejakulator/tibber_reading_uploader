@@ -3,6 +3,8 @@
 import logging
 import os
 import requests
+from datetime import datetime, timedelta
+
 
 # Konfigurieren Sie das Logging
 logging.basicConfig(level=logging.INFO)
@@ -51,6 +53,59 @@ class TibberUploader:
         else:
             _LOGGER.error(f"Failed to get meter reading from Home Assistant: {meter_reading_response.status_code} - {meter_reading_response.text}")
             return
+
+        # Aktuelles Datum
+        current_date = datetime.now().strftime('%Y-%m-%d')
+        
+        # Datum von vor einem Tag
+        yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        
+        # Tibber API-Abfrage für "meterId" und "registerId"
+        tibber_url = "https://app.tibber.com/v4/gql"
+        tibber_headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+        }
+        tibber_data = {
+            "query": """
+                query AccountInfo($readingsFromDate: String!, $readingsToDate: String!) {
+                    me {
+                        id
+                        homes {
+                            currentMeter {
+                                meter {
+                                    id
+                                }
+                                registers {
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }
+            """,
+            "variables": {
+                "readingsFromDate": "2023-10-01",
+                "readingsToDate": "2023-10-31"
+            },
+        }
+        
+        tibber_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_data)
+        if tibber_response.status_code == 200:
+            tibber_response_data = tibber_response.json()['data']['me']['homes'][0]['currentMeter']
+            meter_id = tibber_response_data['meter']['id']
+            register_id = tibber_response_data['registers'][0]['id']
+            print(f"meterId: {meter_id}, registerId: {register_id}")
+        else:
+            print("Failed to get meter and register information from Tibber API")
+
+        
+        # Variablen aus Antwort der Abfrage setzen
+        tibber_response_data = tibber_response.json()['data']['me']['homes'][0]['currentMeter']
+        meter_id = tibber_response_data['meter']['id']
+        register_id = tibber_response_data['registers'][0]['id']
+        print(f"meterId: {meter_id}, registerId: {register_id}")
+
 
         # Jetzt führen wir die Mutation auf der Tibber API durch
         tibber_url = "https://app.tibber.com/v4/gql"
