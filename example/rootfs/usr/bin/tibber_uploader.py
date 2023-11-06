@@ -53,7 +53,7 @@ class TibberUploader:
             return
 
         # Jetzt führen wir die Mutation auf der Tibber API durch
-        tibber_url = "https://api.tibber.com/v1-beta/gql"
+        tibber_url = "https://app.tibber.com/v4/gql"
         tibber_headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json",
@@ -92,7 +92,7 @@ class TibberUploader:
                 "meterId": self.meter_id,
                 "readingDate": reading_date,
                 "registerId": self.register_id,
-                "value": float(meter_reading),  # Konvertieren Sie den Zählerstand in einen Integer
+                "value": float(meter_reading),  # Konvertieren Sie den Zählerstand in einen Float
             },
         }
 
