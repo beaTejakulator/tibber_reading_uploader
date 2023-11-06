@@ -63,10 +63,12 @@ class TibberUploader:
 
         # Aktuelles Datum
         current_date = datetime.now().strftime('%Y-%m-%d')
+        _LOGGER.info(f"Current date: {current_date}")
         
         # Datum von vor einem Tag
         yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
-        
+        _LOGGER.info(f"Yesterday's date: {yesterday_date}")
+
         # Tibber API-Abfrage für "meterId" und "registerId"
         tibber_url = "https://app.tibber.com/v4/gql"
         tibber_headers = {
@@ -159,6 +161,9 @@ class TibberUploader:
                     break
             else:
                 _LOGGER.error("No current meter_id found in homes")
+        else:
+            _LOGGER.error(f"Failed to fetch data from Tibber API: {tibber_response.status_code} - {tibber_response.text}")
+            return  # Beenden Sie die Funktion, da kein weiterer Fortschritt möglich ist
 
             # Now perform the mutation to add the meter reading
             tibber_mutation_url = "https://app.tibber.com/v4/gql"
@@ -202,10 +207,12 @@ class TibberUploader:
             
             # Send the mutation request to Tibber
             tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_headers, json=tibber_mutation_data)
+            _LOGGER.info(f"Data sent to Tibber API: {tibber_mutation_data}")  # Debug-Ausgabe der gesendeten Daten
             if tibber_mutation_response.status_code == 200:
                 _LOGGER.info("Meter reading uploaded successfully")
             else:
                 _LOGGER.error(f"Failed to upload meter reading: {tibber_mutation_response.status_code} - {tibber_mutation_response.text}")
+
 
 
 if __name__ == "__main__":
