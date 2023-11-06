@@ -106,6 +106,7 @@ class TibberUploader:
         
         # Variablen aus Antwort der Abfrage setzen
         tibber_response_data = tibber_response.json()['data']['me']['homes'][0]['currentMeter']
+        print(tibber_response_data)  # Debugging-Ausgabe der gesamten Antwort
         meter_id = tibber_response_data['meter']['id']
         register_id = tibber_response_data['registers'][0]['id']
         print(f"meterId: {meter_id}, registerId: {register_id}")
