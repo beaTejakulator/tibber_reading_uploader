@@ -4,10 +4,5 @@
 # ==============================================================================
 export METER_SENSOR=$(bashio::config 'meter_sensor')
 
-# Überprüfen, ob das Skript bereits ausgeführt wird
-if ! pgrep -f "python3 /usr/bin/tibber_uploader.py" >/dev/null; then
-    # Start the Tibber Uploader service in the foreground
-    python3 /usr/bin/tibber_uploader.py
-else
-    echo "Tibber Uploader is already running."
-fi
+# Start the Tibber Uploader service
+python3 /usr/bin/tibber_uploader.py
