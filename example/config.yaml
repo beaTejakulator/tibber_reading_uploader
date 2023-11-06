@@ -19,11 +19,13 @@ map:
 options:
   token: ""
   meter_sensor: ""
+  register_id: ""  # Hinzugefügt
   email: ""
   password: ""
 schema:
   token: "str"
   meter_sensor: "str"
+  register_id: "str"  # Hinzugefügt
   email: "str"
   password: "str"
 image: "ghcr.io/beatejakulator/{arch}-tibber-reading-uploader"
