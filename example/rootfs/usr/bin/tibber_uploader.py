@@ -39,7 +39,7 @@ class TibberUploader:
             reading_date = response.json()['state']
             _LOGGER.info(f"Current time from Home Assistant retrieved: {reading_date}")
         else:
-            _LOGGER.error("Failed to get current time from Home Assistant")
+            _LOGGER.error(f"Failed to get current time from Home Assistant: {response.status_code} - {response.text}")
             return
 
         # Holen Sie den Zählerstand vom angegebenen Sensor
@@ -49,7 +49,7 @@ class TibberUploader:
             meter_reading = meter_reading_response.json()['state']
             _LOGGER.info(f"Meter reading retrieved: {meter_reading}")
         else:
-            _LOGGER.error("Failed to get meter reading from Home Assistant")
+            _LOGGER.error(f"Failed to get meter reading from Home Assistant: {meter_reading_response.status_code} - {meter_reading_response.text}")
             return
 
         # Jetzt führen wir die Mutation auf der Tibber API durch
