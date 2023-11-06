@@ -26,6 +26,15 @@ class TibberUploader:
             _LOGGER.error('The METER_SENSOR environment variable is not set.')
             raise ValueError('The METER_SENSOR environment variable is not set.')
 
+        # Debugging statement to print the token value
+        print(f'Debug: TOKEN={self.token}')
+
+        # Check if the METER_SENSOR environment variable is set
+        if not self.token:
+            _LOGGER.error('The TOKEN environment variable is not set.')
+            raise ValueError('The TOKEN environment variable is not set.')
+
+
     def upload_reading(self):
         """Upload the meter reading to Tibber."""
         _LOGGER.info("Starting the upload process...")
