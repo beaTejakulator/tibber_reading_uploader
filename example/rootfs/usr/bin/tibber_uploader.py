@@ -202,11 +202,11 @@ class TibberUploader:
             
             # Send the mutation request to Tibber
             tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_headers, json=tibber_mutation_data)
-            if tibber_mutation_response.status_code == 200 {
+            if tibber_mutation_response.status_code == 200:
                 _LOGGER.info("Meter reading uploaded successfully")
-            } else {
+            else:
                 _LOGGER.error(f"Failed to upload meter reading: {tibber_mutation_response.status_code} - {tibber_mutation_response.text}")
-            }
+
 
 if __name__ == "__main__":
     # Hier sollten Sie die Werte durch die tatsächlichen Werte ersetzen, die Sie verwenden möchten
