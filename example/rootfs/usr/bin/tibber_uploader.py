@@ -130,28 +130,33 @@ class TibberUploader:
             },
         }
         
-        tibber_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_data)
-        if tibber_response.status_code == 200:
-            _LOGGER.info("Data successfully fetched from Tibber API")
-
-            # Extract meter and register IDs from the Tibber response
-            tibber_response_data = tibber_response.json()
-            meters_items = tibber_response_data['data']['me']['meters']['items']
-            for item in meters_items:
-                if item['meter']['id'] == self.meter_id:
-                    meter = item['meter']
-                    for register in meter['registers']:
-                        if register['id'] == self.register_id:
-                            # Found the correct register, no need to continue
-                            break
-                    else:
-                        _LOGGER.error(f"No register with id {self.register_id} found for meter {self.meter_id}")
-                        return
-                    break
-            else:
-                _LOGGER.error(f"No meter with id {self.meter_id} found")
-                return
-            _LOGGER.info(f"Meter and register IDs confirmed: {self.meter_id}, {self.register_id}")
+        tibber_response_data = tibber_response.json()
+        
+        # Extrahieren Sie die meter_id und register_id dynamisch
+        homes = tibber_response_data['data']['me']['homes']
+        meters_items = tibber_response_data['data']['me']['meters']['items']
+        
+        # Angenommen, Sie möchten die meter_id und register_id des aktuellen Zählers extrahieren
+        for home in homes:
+            current_meter_id = home.get('currentMeter', {}).get('id')
+            if current_meter_id:
+                _LOGGER.info(f"Found current meter_id: {current_meter_id}")
+                # Finden Sie das entsprechende Meter-Objekt in den Meter-Items
+                for item in meters_items:
+                    meter = item.get('meter')
+                    if meter and meter.get('id') == current_meter_id:
+                        # Angenommen, Sie möchten die erste Register-ID aus diesem Meter extrahieren
+                        register_id = meter['registers'][0]['id']
+                        _LOGGER.info(f"Found register_id: {register_id}")
+                        # Setzen Sie die gefundenen IDs als Eigenschaften des Uploader-Objekts
+                        self.meter_id = current_meter_id
+                        self.register_id = register_id
+                        break
+                else:
+                    _LOGGER.error(f"No meter found for current meter_id: {current_meter_id}")
+                break
+        else:
+            _LOGGER.error("No current meter_id found in homes")
 
             # Now perform the mutation to add the meter reading
             tibber_mutation_url = "https://app.tibber.com/v4/gql"
