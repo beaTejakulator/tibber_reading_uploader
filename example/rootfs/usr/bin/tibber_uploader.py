@@ -210,8 +210,13 @@ class TibberUploader:
             tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_headers, json=tibber_mutation_data)
             if tibber_mutation_response.status_code == 200:
                 _LOGGER.info("Meter reading uploaded successfully")
+                # Hier fügen wir die Ausgabe der vollständigen Antwort hinzu
+                _LOGGER.info(f"Full response from Tibber API: {tibber_mutation_response.json()}")
             else:
                 _LOGGER.error(f"Failed to upload meter reading: {tibber_mutation_response.status_code} - {tibber_mutation_response.text}")
+                # Hier fügen wir auch die Ausgabe der vollständigen Fehlerantwort hinzu
+                _LOGGER.error(f"Full error response from Tibber API: {tibber_mutation_response.json()}")
+
         else:
             _LOGGER.error(f"Failed to fetch data from Tibber API: {tibber_response.status_code} - {tibber_response.text}")
 
