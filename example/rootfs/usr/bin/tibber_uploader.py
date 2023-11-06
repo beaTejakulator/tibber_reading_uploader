@@ -92,12 +92,16 @@ class TibberUploader:
         
         tibber_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_data)
         if tibber_response.status_code == 200:
-            tibber_response_data = tibber_response.json()['data']['me']['homes'][0]['currentMeter']
-            meter_id = tibber_response_data['meter']['id']
-            register_id = tibber_response_data['registers'][0]['id']
-            print(f"meterId: {meter_id}, registerId: {register_id}")
+            tibber_response_data = tibber_response.json().get('data', {}).get('me', {}).get('homes', [])[0].get('currentMeter', {})
+            meter_id = tibber_response_data.get('meter', {}).get('id')
+            register_id = tibber_response_data.get('registers', [{}])[0].get('id')
+            if meter_id and register_id:
+                print(f"meterId: {meter_id}, registerId: {register_id}")
+            else:
+                print("Failed to get meter and register information from Tibber API")
         else:
             print("Failed to get meter and register information from Tibber API")
+
 
         
         # Variablen aus Antwort der Abfrage setzen
