@@ -92,15 +92,32 @@ class TibberUploader:
         
         tibber_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_data)
         if tibber_response.status_code == 200:
-            tibber_response_data = tibber_response.json().get('data', {}).get('me', {}).get('homes', [])[0].get('currentMeter', {})
-            meter_id = tibber_response_data.get('meter', {}).get('id')
-            register_id = tibber_response_data.get('registers', [{}])[0].get('id')
-            if meter_id and register_id:
-                print(f"meterId: {meter_id}, registerId: {register_id}")
-            else:
-                print("Failed to get meter and register information from Tibber API")
+            try:
+                tibber_response_data = tibber_response.json()
+                # Angenommen, die Struktur der Antwort ist ähnlich dem bereitgestellten JSON-Beispiel
+                meters_items = tibber_response_data['data']['me']['meters']['items']
+                meter_id = None
+                register_id = None
+        
+                for item in meters_items:
+                    meter = item.get('meter')
+                    if meter:
+                        meter_id = meter.get('id')
+                        registers = meter.get('registers')
+                        if registers:
+                            register_id = registers[0].get('id')
+                        break  # Nach dem ersten gültigen "meter" die Schleife verlassen
+        
+                if meter_id and register_id:
+                    print(f"Meter ID: {meter_id}")
+                    print(f"Register ID: {register_id}")
+                else:
+                    print("Failed to get meter and register IDs")
+        
+            except json.JSONDecodeError as e:
+                print("Failed to parse JSON response:", e)
         else:
-            print("Failed to get meter and register information from Tibber API")
+            print(f"Failed to get a successful response from Tibber API. Status code: {tibber_response.status_code}")
 
 
         
