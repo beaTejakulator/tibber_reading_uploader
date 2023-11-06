@@ -71,13 +71,44 @@ class TibberUploader:
                 query AccountInfo($readingsFromDate: String!, $readingsToDate: String!) {
                     me {
                         id
-                        homes {
-                            currentMeter {
+                        firstName
+                        lastName
+                        email
+                        meters {
+                            items {
                                 meter {
                                     id
+                                    title
+                                    description
+                                    registers {
+                                        id
+                                    }
                                 }
-                                registers {
-                                    id
+                            }
+                        }
+                        homes {
+                            id
+                            address {
+                                addressText
+                                city
+                                postalCode
+                                country
+                            }
+                            currentMeter {
+                                id
+                                meterNo
+                                isUserRead
+                            }
+                            consumptionAnalysisItemsForUserReadMeter(from: $readingsFromDate, to: $readingsToDate, useDemoData: false) {
+                                from
+                                to
+                                meterReadingForCurrentMonthIsRecommended
+                                meterReadingForPreviousMonthIsRecommended
+                                meterReadings {
+                                    date
+                                    registers {
+                                        value
+                                    }
                                 }
                             }
                         }
