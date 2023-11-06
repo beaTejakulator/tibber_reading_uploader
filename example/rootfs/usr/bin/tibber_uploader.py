@@ -145,8 +145,8 @@ class TibberUploader:
                 else:
                     print("Failed to get meter and register IDs")
         
-            except json.JSONDecodeError as e:
-                print("Failed to parse JSON response:", e)
+            except requests.exceptions.RequestException as e:
+                print("Request failed:", e)
         else:
             print(f"Failed to get a successful response from Tibber API. Status code: {tibber_response.status_code}")
 
