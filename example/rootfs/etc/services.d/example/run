@@ -13,10 +13,10 @@ echo "EMAIL: $EMAIL"
 # Don't log the password for security reasons
 # echo "PASSWORD: $PASSWORD"
 
-# Start the main script and redirect stdout and stderr to the console
-# Replace 'tibber_uploader.py' with 'main.py' if that's your main script after splitting
+# Start the main script without redirecting stdout and stderr
 echo "Launching main.py..."
-python3 /usr/bin/main.py >> /proc/1/fd/1 2>> /proc/1/fd/2
+python3 /usr/bin/main.py
 
 # Log the end time
 echo "Tibber Uploader service finished at $(date)"
+
