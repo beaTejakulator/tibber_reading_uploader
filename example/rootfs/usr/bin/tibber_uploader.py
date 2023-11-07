@@ -143,18 +143,34 @@ class TibberUploader:
             
             # Extrahieren Sie die meter_id und register_id dynamisch
             homes = tibber_response_data['data']['me']['homes']
+            meters_items = tibber_response_data['data']['me']['meters']['items']
             
             # Angenommen, Sie möchten die meter_id und register_id des aktuellen Zählers extrahieren
             for home in homes:
                 current_meter_id = home.get('currentMeter', {}).get('id')
                 if current_meter_id:
                     _LOGGER.info(f"Found current meter_id: {current_meter_id}")
-                    self.meter_id = current_meter_id
+                    # Finden Sie das entsprechende Meter-Objekt in den Meter-Items
+                    for item in meters_items:
+                        meter = item.get('meter')
+                        if meter and meter.get('id') == current_meter_id:
+                            # Angenommen, Sie möchten die erste Register-ID aus diesem Meter extrahieren
+                            register_id = meter['registers'][0]['id']
+                            _LOGGER.info(f"Found register_id: {register_id}")
+                            # Setzen Sie die gefundenen IDs als Eigenschaften des Uploader-Objekts
+                            self.meter_id = current_meter_id
+                            self.register_id = register_id
+                            break
+                    else:
+                        _LOGGER.error(f"No meter found for current meter_id: {current_meter_id}")
                     break
             else:
                 _LOGGER.error("No current meter_id found in homes")
                 return  # Beenden Sie die Funktion, da kein weiterer Fortschritt möglich ist
-
+        
+            # Runden Sie den Wert, bevor Sie ihn hochladen
+            rounded_value = round(float(meter_reading))
+        
             # Now perform the mutation to add the meter reading
             tibber_mutation_url = "https://app.tibber.com/v4/gql"
             tibber_mutation_data = {
@@ -191,24 +207,22 @@ class TibberUploader:
                     "meterId": self.meter_id,
                     "readingDate": reading_date,
                     "registerId": self.register_id,
-                    "value": rounded_meter_reading  # Verwenden Sie den gerundeten Wert
+                    "value": rounded_value  # Verwenden Sie den gerundeten Wert
                 },
             }
             
             # Debug-Ausgabe für die gesendeten Daten
             _LOGGER.debug(f"Sending mutation to Tibber API with data: {tibber_mutation_data}")
-
+        
             # Senden Sie die Mutation-Anfrage an die Tibber API
             tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_headers, json=tibber_mutation_data)
             if tibber_mutation_response.status_code == 200:
                 _LOGGER.info("Meter reading uploaded successfully")
-                _LOGGER.info(f"Full response from Tibber API: {tibber_mutation_response.json()}")
             else:
                 _LOGGER.error(f"Failed to upload meter reading: {tibber_mutation_response.status_code} - {tibber_mutation_response.text}")
-                _LOGGER.error(f"Full error response from Tibber API: {tibber_mutation_response.json()}")
-
         else:
             _LOGGER.error(f"Failed to fetch data from Tibber API: {tibber_response.status_code} - {tibber_response.text}")
+
 
 
 if __name__ == "__main__":
