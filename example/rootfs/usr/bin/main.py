@@ -1,13 +1,6 @@
 import os
 from auth import get_tibber_token
 from uploader import TibberUploader
-from logger import setup_logging
-
-# Logging konfigurieren
-setup_logging()
-
-import logging
-_LOGGER = logging.getLogger(__name__)
 
 if __name__ == "__main__":
     # Anmeldeinformationen aus Umgebungsvariablen lesen
@@ -16,7 +9,6 @@ if __name__ == "__main__":
 
     # Überprüfen, ob Anmeldeinformationen vorhanden sind
     if not email or not password:
-        _LOGGER.error("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
         raise ValueError("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
 
     # Token abrufen
