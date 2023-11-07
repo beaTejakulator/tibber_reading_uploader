@@ -17,12 +17,12 @@ host_network: true
 map:
   - share:rw
 options:
-  token: ""
+#  token: ""
   meter_sensor: ""
   email: ""
   password: ""
 schema:
-  token: "str"
+#  token: "str"
   meter_sensor: "str"
   email: "str"
   password: "str"
