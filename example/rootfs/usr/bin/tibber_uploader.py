@@ -3,6 +3,7 @@
 import logging
 import os
 import requests
+import time
 from datetime import datetime, timedelta
 
 # Konfigurieren Sie das Logging
