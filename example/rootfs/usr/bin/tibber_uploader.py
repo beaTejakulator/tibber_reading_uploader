@@ -1,13 +1,28 @@
 #!/usr/bin/env python3
 
-import logging
 import os
+import sys
+import logging
 import requests
 from datetime import datetime, timedelta
 
 # Konfigurieren Sie das Logging
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
+
+# Hier beginnt die Implementierung der Sperre
+lockfile_path = "/tmp/tibber_uploader.lock"
+
+# Überprüfen Sie, ob die Sperre existiert
+if os.path.exists(lockfile_path):
+    _LOGGER.error("Das Skript läuft bereits oder wurde kürzlich ausgeführt.")
+    sys.exit()
+
+# Erstellen Sie eine Sperre, um zu signalisieren, dass das Skript ausgeführt wird
+with open(lockfile_path, 'w') as lockfile:
+    lockfile.write("running")
+
+
 
 # Funktion, um den Token über eine API-Abfrage zu erhalten
 def get_tibber_token(email: str, password: str) -> str:
@@ -242,23 +257,28 @@ class TibberUploader:
             _LOGGER.error(f"Failed to fetch data from Tibber API: {tibber_response.status_code} - {tibber_response.text}")
 
 if __name__ == "__main__":
-    # Anmeldeinformationen aus Umgebungsvariablen lesen
-    email = os.getenv('EMAIL')
-    password = os.getenv('PASSWORD')
+    try:
+        # Anmeldeinformationen aus Umgebungsvariablen lesen
+        email = os.getenv('EMAIL')
+        password = os.getenv('PASSWORD')
 
-    # Überprüfen, ob Anmeldeinformationen vorhanden sind
-    if not email or not password:
-        _LOGGER.error("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
-        raise ValueError("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
+        # Überprüfen, ob Anmeldeinformationen vorhanden sind
+        if not email or not password:
+            _LOGGER.error("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
+            raise ValueError("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
 
-    # Token abrufen
-    token = get_tibber_token(email, password)
+        # Token abrufen
+        token = get_tibber_token(email, password)
 
-    # Umgebungsvariablen für die restlichen Parameter lesen
-    meter_id = os.getenv('METER_ID')  # Wenn Sie auch meter_id konfigurieren möchten
-    register_id = os.getenv('REGISTER_ID')  # Liest die register_id aus der Umgebung
-    meter_sensor = os.getenv('METER_SENSOR')
+        # Umgebungsvariablen für die restlichen Parameter lesen
+        meter_id = os.getenv('METER_ID')  # Wenn Sie auch meter_id konfigurieren möchten
+        register_id = os.getenv('REGISTER_ID')  # Liest die register_id aus der Umgebung
+        meter_sensor = os.getenv('METER_SENSOR')
 
-    # TibberUploader-Instanz erstellen und Ausführung starten
-    uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
-    uploader.upload_reading()
+        # TibberUploader-Instanz erstellen und Ausführung starten
+        uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
+        uploader.upload_reading()
+    finally:
+        # Entfernen Sie die Sperre, wenn das Skript fertig ist
+        if os.path.exists(lockfile_path):
+            os.remove(lockfile_path)
