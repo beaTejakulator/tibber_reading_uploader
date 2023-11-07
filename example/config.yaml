@@ -12,9 +12,7 @@ arch:
   - i386
 init: false
 homeassistant_api: true
-hassio_api: true
 host_network: true
-startup: once
 map:
   - share:rw
 options:
