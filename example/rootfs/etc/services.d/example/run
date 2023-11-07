@@ -19,4 +19,3 @@ python3 /usr/bin/main.py
 
 # Log the end time
 echo "Tibber Uploader service finished at $(date)"
-
