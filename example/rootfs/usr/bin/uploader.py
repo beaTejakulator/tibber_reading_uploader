@@ -1,74 +1,18 @@
-#!/usr/bin/env python3
-
-import os
+# uploader.py
 import requests
-from datetime import datetime, timedelta
-
-# Funktion, um den Token über eine API-Abfrage zu erhalten
-def get_tibber_token(email: str, password: str) -> str:
-    auth_url = "https://app.tibber.com/v1/login.credentials"
-    auth_data = {
-        "email": email,
-        "password": password
-    }
-    response = requests.post(auth_url, json=auth_data)
-    if response.status_code == 200:
-        token = response.json().get('token')
-        if token:
-            return token
-        else:
-            raise ValueError("Token konnte nicht aus der Antwort extrahiert werden.")
-    else:
-        raise ValueError(f"Authentifizierung fehlgeschlagen: {response.status_code} - {response.text}")
+from datetime import datetime
 
 class TibberUploader:
-    def __init__(self, token: str, meter_id: str, register_id: str, meter_sensor: str):
+    def __init__(self, token, hass_interactions):
         self.token = token
-        self.meter_id = meter_id
-        self.register_id = register_id
-        self.meter_sensor = meter_sensor
-        self.supervisor_token = os.getenv('SUPERVISOR_TOKEN')
-
-        # Check if the METER_SENSOR environment variable is set
-        if not self.meter_sensor:
-            raise ValueError('The METER_SENSOR environment variable is not set.')
-
-        # Check if the token is set
-        if not self.token:
-            raise ValueError('The TOKEN environment variable is not set.')
+        self.hass_interactions = hass_interactions
 
     def upload_reading(self):
-        """Upload the meter reading to Tibber."""
-        
-        # Hier verwenden wir die Supervisor API, um die aktuelle Zeit von Home Assistant zu erhalten
-        hass_url = "http://supervisor/core/api/states/sensor.date_time"
-        headers = {
-            "Authorization": f"Bearer {self.supervisor_token}",
-            "Content-Type": "application/json",
-        }
-        response = requests.get(hass_url, headers=headers)
-        if response.status_code != 200:
-            return
+        # Datum und Uhrzeit von Home Assistant abrufen
+        reading_date = self.hass_interactions.get_reading_date()
 
-        reading_date = response.json()['state']
-
-        # Holen Sie den Zählerstand vom angegebenen Sensor
-        meter_reading_url = f"http://supervisor/core/api/states/{self.meter_sensor}"
-        meter_reading_response = requests.get(meter_reading_url, headers=headers)
-        if meter_reading_response.status_code != 200:
-            return
-
-        meter_reading = meter_reading_response.json()['state']
-
-        # Konvertieren Sie den Meterstand in eine Fließkommazahl und runden Sie ihn
-        meter_reading_value = float(meter_reading)
-        rounded_meter_reading = round(meter_reading_value)
-
-        # Aktuelles Datum
-        current_date = datetime.now().strftime('%Y-%m-%d')
-        
-        # Datum von vor einem Tag
-        yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
+        # Zählerstand vom angegebenen Sensor abrufen
+        meter_reading = self.hass_interactions.get_meter_reading(self.meter_sensor)
 
         # Tibber API-Abfrage für "meterId" und "registerId"
         tibber_url = "https://app.tibber.com/v4/gql"
@@ -206,24 +150,3 @@ class TibberUploader:
         tibber_mutation_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_mutation_data)
         if tibber_mutation_response.status_code != 200:
             return
-
-if __name__ == "__main__":
-    # Anmeldeinformationen aus Umgebungsvariablen lesen
-    email = os.getenv('EMAIL')
-    password = os.getenv('PASSWORD')
-
-    # Überprüfen, ob Anmeldeinformationen vorhanden sind
-    if not email or not password:
-        raise ValueError("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
-
-    # Token abrufen
-    token = get_tibber_token(email, password)
-
-    # Umgebungsvariablen für die restlichen Parameter lesen
-    meter_id = os.getenv('METER_ID')  # Wenn Sie auch meter_id konfigurieren möchten
-    register_id = os.getenv('REGISTER_ID')  # Liest die register_id aus der Umgebung
-    meter_sensor = os.getenv('METER_SENSOR')
-
-    # TibberUploader-Instanz erstellen und Ausführung starten
-    uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
-    uploader.upload_reading()
