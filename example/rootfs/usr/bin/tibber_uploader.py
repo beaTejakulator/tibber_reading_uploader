@@ -9,6 +9,23 @@ from datetime import datetime, timedelta
 logging.basicConfig(level=logging.INFO)
 _LOGGER = logging.getLogger(__name__)
 
+# Funktion, um den Token über eine API-Abfrage zu erhalten
+def get_tibber_token(email: str, password: str) -> str:
+    auth_url = "https://app.tibber.com/v1/login.credentials"
+    auth_data = {
+        "email": email,
+        "password": password
+    }
+    response = requests.post(auth_url, json=auth_data)
+    if response.status_code == 200:
+        token = response.json().get('token')
+        if token:
+            return token
+        else:
+            raise ValueError("Token konnte nicht aus der Antwort extrahiert werden.")
+    else:
+        raise ValueError(f"Authentifizierung fehlgeschlagen: {response.status_code} - {response.text}")
+
 class TibberUploader:
     def __init__(self, token: str, meter_id: str, register_id: str, meter_sensor: str):
         self.token = token
@@ -173,6 +190,10 @@ class TibberUploader:
         
             # Now perform the mutation to add the meter reading
             tibber_mutation_url = "https://app.tibber.com/v4/gql"
+            tibber_mutation_headers = {
+                "Authorization": f"Bearer {self.token}",
+                "Content-Type": "application/json",
+            }
             tibber_mutation_data = {
                 "query": """
                     mutation AddMeterReadings($meterId: String!, $readingDate: String!, $registerId: String!, $value: Float!) {
@@ -211,11 +232,8 @@ class TibberUploader:
                 },
             }
             
-            # Debug-Ausgabe für die gesendeten Daten
-            _LOGGER.debug(f"Sending mutation to Tibber API with data: {tibber_mutation_data}")
-        
             # Senden Sie die Mutation-Anfrage an die Tibber API
-            tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_headers, json=tibber_mutation_data)
+            tibber_mutation_response = requests.post(tibber_mutation_url, headers=tibber_mutation_headers, json=tibber_mutation_data)
             if tibber_mutation_response.status_code == 200:
                 _LOGGER.info("Meter reading uploaded successfully")
             else:
@@ -223,14 +241,24 @@ class TibberUploader:
         else:
             _LOGGER.error(f"Failed to fetch data from Tibber API: {tibber_response.status_code} - {tibber_response.text}")
 
-
-
 if __name__ == "__main__":
-    # Hier sollten Sie die Werte durch die tatsächlichen Werte ersetzen, die Sie verwenden möchten
-    token = os.getenv('TOKEN')
+    # Anmeldeinformationen aus Umgebungsvariablen lesen
+    email = os.getenv('TIBBER_EMAIL')
+    password = os.getenv('TIBBER_PASSWORD')
+
+    # Überprüfen, ob Anmeldeinformationen vorhanden sind
+    if not email or not password:
+        _LOGGER.error("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
+        raise ValueError("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
+
+    # Token abrufen
+    token = get_tibber_token(email, password)
+
+    # Umgebungsvariablen für die restlichen Parameter lesen
     meter_id = os.getenv('METER_ID')  # Wenn Sie auch meter_id konfigurieren möchten
     register_id = os.getenv('REGISTER_ID')  # Liest die register_id aus der Umgebung
     meter_sensor = os.getenv('METER_SENSOR')
 
+    # TibberUploader-Instanz erstellen und Ausführung starten
     uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
     uploader.upload_reading()
