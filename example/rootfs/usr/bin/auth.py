@@ -1,4 +1,5 @@
-# auth.py
+import logging  # Diesen Import hinzufügen
+
 from logger import setup_logging
 setup_logging()
 
