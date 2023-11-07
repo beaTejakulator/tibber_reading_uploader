@@ -1,9 +1,12 @@
 import os
 from auth import get_tibber_token
 from uploader import TibberUploader
+from logger import setup_logging
 
-# Konfigurieren Sie das Logging
-logging.basicConfig(level=logging.INFO)
+# Logging konfigurieren
+setup_logging()
+
+import logging
 _LOGGER = logging.getLogger(__name__)
 
 if __name__ == "__main__":
