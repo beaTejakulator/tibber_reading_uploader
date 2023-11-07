@@ -1,6 +1,7 @@
 #!/usr/bin/with-contenv bashio
-
+# ==============================================================================
 # Set environment variables from the add-on configuration
+# ==============================================================================
 export METER_SENSOR=$(bashio::config 'meter_sensor')
 export EMAIL=$(bashio::config 'email')
 export PASSWORD=$(bashio::config 'password')
@@ -9,182 +10,12 @@ export PASSWORD=$(bashio::config 'password')
 echo "Starting Tibber Uploader service at $(date)"
 echo "METER_SENSOR: $METER_SENSOR"
 echo "EMAIL: $EMAIL"
-
 # Don't log the password for security reasons
 # echo "PASSWORD: $PASSWORD"
 
-# Configure logging
-LOG_FILE="/config/tibber_uploader.log"
-exec > >(tee -a $LOG_FILE) 2>&1
+# Start the main script without redirecting stdout and stderr
+echo "Launching main.py..."
+python3 /usr/bin/main.py
 
-# Function to get the Tibber token via an API request
-get_tibber_token() {
-    local email="$1"
-    local password="$2"
-    local auth_url="https://app.tibber.com/v1/login.credentials"
-    local auth_data='{"email":"'"$email"'","password":"'"$password"'"}'
-    local response
-    response=$(curl -s -X POST -H "Content-Type: application/json" -d "$auth_data" "$auth_url")
-    local token
-    token=$(echo "$response" | jq -r '.token')
-    if [ -n "$token" ]; then
-        echo "$token"
-    else
-        echo "Token could not be extracted from the response." >&2
-        exit 1
-    fi
-}
-
-# Function to upload the meter reading to Tibber
-upload_reading() {
-    local token="$1"
-    local meter_id="$2"
-    local register_id="$3"
-    local meter_sensor="$4"
-
-    echo "Starting the upload process..."
-
-    # Get current time from Home Assistant
-    local hass_url="http://supervisor/core/api/states/sensor.date_time"
-    local supervisor_token="$SUPERVISOR_TOKEN"
-    local reading_date
-    reading_date=$(curl -s -X GET -H "Authorization: Bearer $supervisor_token" -H "Content-Type: application/json" "$hass_url" | jq -r '.state')
-
-    if [ -z "$reading_date" ]; then
-        echo "Failed to get current time from Home Assistant." >&2
-        exit 1
-    fi
-
-    echo "Current time from Home Assistant retrieved: $reading_date"
-
-    # Get meter reading from the specified sensor
-    local headers="Authorization: Bearer $supervisor_token"
-    local meter_reading_url="http://supervisor/core/api/states/$meter_sensor"
-    local meter_reading
-    meter_reading=$(curl -s -X GET -H "$headers" -H "Content-Type: application/json" "$meter_reading_url" | jq -r '.state')
-
-    if [ -z "$meter_reading" ]; then
-        echo "Failed to get meter reading from Home Assistant." >&2
-        exit 1
-    fi
-
-    echo "Meter reading retrieved: $meter_reading"
-
-    # Convert meter reading to float and round it
-    local meter_reading_value
-    meter_reading_value=$(echo "$meter_reading" | awk -F'.' '{print $1}')
-    local rounded_meter_reading
-    rounded_meter_reading=$(round "$meter_reading_value")
-
-    echo "Rounded meter reading to nearest whole number: $rounded_meter_reading"
-
-    # Current date
-    local current_date
-    current_date=$(date +'%Y-%m-%d')
-
-    echo "Current date: $current_date"
-
-    # Date from one day ago
-    local yesterday_date
-    yesterday_date=$(date -d '1 day ago' +'%Y-%m-%d')
-
-    echo "Yesterday's date: $yesterday_date"
-
-    # Tibber API query for "meterId" and "registerId"
-    local tibber_url="https://app.tibber.com/v4/gql"
-    local tibber_headers="Authorization: Bearer $token"
-    local tibber_data='{
-        "query": "query AccountInfo($readingsFromDate: String!, $readingsToDate: String!) { me { id firstName lastName email meters { items { meter { id title description registers { id } } } } homes { id address { addressText city postalCode country } currentMeter { id meterNo isUserRead } consumptionAnalysisItemsForUserReadMeter(from: $readingsFromDate, to: $readingsToDate, useDemoData: false) { from to meterReadingForCurrentMonthIsRecommended meterReadingForPreviousMonthIsRecommended meterReadings { date registers { value } } } } } } }",
-        "variables": { "readingsFromDate": "'"$yesterday_date"'", "readingsToDate": "'"$current_date"'" }
-    }'
-
-    local tibber_response
-    tibber_response=$(curl -s -X POST -H "$tibber_headers" -H "Content-Type: application/json" -d "$tibber_data" "$tibber_url")
-
-    if [ -z "$tibber_response" ]; then
-        echo "Failed to fetch data from Tibber API." >&2
-        exit 1
-    fi
-
-    echo "Data successfully fetched from Tibber API"
-
-    # Extract meter_id and register_id dynamically
-    local current_meter_id
-    current_meter_id=$(echo "$tibber_response" | jq -r '.data.me.homes[].currentMeter.id')
-
-    if [ -z "$current_meter_id" ]; then
-        echo "No current meter_id found in homes." >&2
-        exit 1
-    fi
-
-    echo "Found current meter_id: $current_meter_id"
-
-    # Find the corresponding meter object in meters items
-    local register_id
-    register_id=$(echo "$tibber_response" | jq -r '.data.me.meters.items[] | select(.meter.id == "'"$current_meter_id"'") | .meter.registers[0].id')
-
-    if [ -z "$register_id" ]; then
-        echo "No register found for current meter_id: $current_meter_id." >&2
-        exit 1
-    fi
-
-    echo "Found register_id: $register_id"
-
-    # Round the value before uploading
-    local rounded_value
-    rounded_value=$(round "$rounded_meter_reading")
-
-    # Perform the mutation to add the meter reading
-    local tibber_mutation_url="https://app.tibber.com/v4/gql"
-    local tibber_mutation_data='{
-        "query": "mutation AddMeterReadings($meterId: String!, $readingDate: String!, $registerId: String!, $value: Float!) { me { addMeterReadings(meterId: $meterId, readingDate: $readingDate, readings: [ { id: $registerId, value: $value } ] ) { success { inputTitle inputValue title descriptionHtml doneButtonText } error { statusCode title message } } } }",
-        "variables": { "meterId": "'"$meter_id"'", "readingDate": "'"$reading_date"'", "registerId": "'"$register_id"'", "value": '"$rounded_value"' }
-    }'
-
-    local tibber_mutation_response
-    tibber_mutation_response=$(curl -s -X POST -H "$tibber_headers" -H "Content-Type: application/json" -d "$tibber_mutation_data" "$tibber_mutation_url")
-
-    if [ -n "$tibber_mutation_response" ]; then
-        echo "Meter reading uploaded successfully"
-    else
-        echo "Failed to upload meter reading." >&2
-        exit 1
-    fi
-}
-
-# Main function
-main() {
-    local email="$EMAIL"
-    local password="$PASSWORD"
-
-    # Check if credentials are set
-    if [ -z "$email" ] || [ -z "$password" ]; then
-        echo "Tibber credentials are not set." >&2
-        exit 1
-    fi
-
-    # Get Tibber token
-    local token
-    token=$(get_tibber_token "$email" "$password")
-
-    # Read environment variables for the remaining parameters
-    local meter_id="$METER_ID"
-    local register_id="$REGISTER_ID"
-    local meter_sensor="$METER_SENSOR"
-
-    # Check if METER_SENSOR is set
-    if [ -z "$meter_sensor" ]; then
-        echo "The METER_SENSOR environment variable is not set." >&2
-        exit 1
-    fi
-
-    # Check if the token is set
-    if [ -z "$token" ]; then
-        echo "The TOKEN environment variable is not set." >&2
-        exit 1
-    fi
-
-    upload_reading "$token" "$meter_id" "$register_id" "$meter_sensor"
-}
-
-main
+# Log the end time
+echo "Tibber Uploader service finished at $(date)"
