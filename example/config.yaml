@@ -10,7 +10,7 @@ arch:
   - aarch64
   - amd64
   - i386
-init: false
+init: true
 homeassistant_api: true
 host_network: true
 map:
