@@ -2,9 +2,11 @@ import logging
 import os
 import requests
 from datetime import datetime, timedelta
+from logger import setup_logging
 
-# Konfigurieren Sie das Logging
-logging.basicConfig(level=logging.INFO)
+# Logging konfigurieren
+setup_logging()
+
 _LOGGER = logging.getLogger(__name__)
 
 class TibberUploader:
