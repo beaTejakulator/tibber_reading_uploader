@@ -15,7 +15,6 @@ homeassistant_api: true
 hassio_api: true
 host_network: true
 startup: once
-apparmor: true
 map:
   - share:rw
 options:
