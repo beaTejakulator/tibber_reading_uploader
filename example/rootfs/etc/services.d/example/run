@@ -3,8 +3,8 @@
 # Set environment variables from the add-on configuration
 # ==============================================================================
 export METER_SENSOR=$(bashio::config 'meter_sensor')
-export TOKEN=$(bashio::config 'token')
-export REGISTER_ID=$(bashio::config 'register_id')
+# export TOKEN=$(bashio::config 'token')
+# export REGISTER_ID=$(bashio::config 'register_id')
 
 # Start the Tibber Uploader service
 python3 /usr/bin/tibber_uploader.py
