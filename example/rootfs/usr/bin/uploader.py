@@ -3,9 +3,10 @@ import requests
 from datetime import datetime
 
 class TibberUploader:
-    def __init__(self, token, hass_interactions):
+    def __init__(self, token, hass_interactions, meter_sensor):
         self.token = token
         self.hass_interactions = hass_interactions
+        self.meter_sensor = meter_sensor
 
     def upload_reading(self):
         # Datum und Uhrzeit von Home Assistant abrufen
