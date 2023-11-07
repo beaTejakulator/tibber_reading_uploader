@@ -1,15 +1,8 @@
-import logging
-import sys
+# auth.py
+from logger import setup_logging
+setup_logging()
 
-# Konfigurieren Sie das Logging, um auf die Standardausgabe zu schreiben
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.StreamHandler(sys.stdout)  # Log-Ausgabe auf stdout
-    ]
-)
-
+import requests
 _LOGGER = logging.getLogger(__name__)
 
 def get_tibber_token(email: str, password: str) -> str:
