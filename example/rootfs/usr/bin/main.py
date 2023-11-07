@@ -1,7 +1,8 @@
 import os
+import logging
 from auth import get_tibber_token
 from uploader import TibberUploader
-import logging
+from hass_interactions import HASSInteractions  # Sie benötigen HASSInteractions
 
 # Konfigurieren Sie das Logging
 logging.basicConfig(level=logging.INFO)
@@ -11,11 +12,12 @@ if __name__ == "__main__":
     # Anmeldeinformationen aus Umgebungsvariablen lesen
     email = os.getenv('EMAIL')
     password = os.getenv('PASSWORD')
+    supervisor_token = os.getenv('SUPERVISOR_TOKEN')  # Umgebungsfaktor für HASSInteractions
 
     # Überprüfen, ob Anmeldeinformationen vorhanden sind
-    if not email or not password:
-        logger.error("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
-        raise ValueError("Die Anmeldeinformationen für Tibber sind nicht gesetzt.")
+    if not email or not password or not supervisor_token:
+        logger.error("Die Anmeldeinformationen oder Konfigurationen sind nicht korrekt gesetzt.")
+        raise ValueError("Die Anmeldeinformationen oder Konfigurationen sind nicht korrekt gesetzt.")
 
     # Token abrufen
     try:
@@ -30,12 +32,14 @@ if __name__ == "__main__":
     register_id = os.getenv('REGISTER_ID')
     meter_sensor = os.getenv('METER_SENSOR')
 
+    # HASSInteractions-Instanz erstellen
+    hass_interactions = HASSInteractions(supervisor_token)
+
     # TibberUploader-Instanz erstellen und Ausführung starten
     try:
-        uploader = TibberUploader(token, meter_id, register_id, meter_sensor)
+        uploader = TibberUploader(token, hass_interactions)
         uploader.upload_reading()
         logger.info("Upload-Prozess erfolgreich gestartet.")
     except Exception as e:
         logger.error(f"Fehler beim Starten des Upload-Prozesses: {e}")
         raise
-
