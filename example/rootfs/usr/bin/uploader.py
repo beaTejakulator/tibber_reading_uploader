@@ -12,6 +12,10 @@ class TibberUploader:
         # Datum und Uhrzeit von Home Assistant abrufen
         reading_date = self.hass_interactions.get_reading_date()
 
+        # Datum für gestern und heute berechnen
+        yesterday_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        current_date = datetime.now().strftime("%Y-%m-%d")
+
         # Zählerstand vom angegebenen Sensor abrufen
         meter_reading = self.hass_interactions.get_meter_reading(self.meter_sensor)
 
