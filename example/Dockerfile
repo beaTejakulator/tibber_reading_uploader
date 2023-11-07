@@ -1,5 +1,6 @@
-# Verwenden Sie das Alpine Linux Basisimage
-FROM alpine:latest
+# Verwenden Sie das Basisimage, das von der Build-Umgebung bereitgestellt wird
+ARG BUILD_FROM
+FROM $BUILD_FROM
 
 # Setzen Sie Umgebungsvariablen
 ENV LANG C.UTF-8
