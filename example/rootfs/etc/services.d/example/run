@@ -6,5 +6,16 @@ export METER_SENSOR=$(bashio::config 'meter_sensor')
 export EMAIL=$(bashio::config 'email')
 export PASSWORD=$(bashio::config 'password')
 
-# Start the Tibber Uploader service
-python3 /usr/bin/tibber_uploader.py
+# Log the start time and environment variables
+echo "Starting Tibber Uploader service at $(date)"
+echo "METER_SENSOR: $METER_SENSOR"
+echo "EMAIL: $EMAIL"
+# Don't log the password for security reasons
+# echo "PASSWORD: $PASSWORD"
+
+# Start the Tibber Uploader service and redirect stdout and stderr to the console
+echo "Launching tibber_uploader.py..."
+python3 /usr/bin/tibber_uploader.py >> /proc/1/fd/1 2>> /proc/1/fd/2
+
+# Log the end time
+echo "Tibber Uploader service finished at $(date)"
