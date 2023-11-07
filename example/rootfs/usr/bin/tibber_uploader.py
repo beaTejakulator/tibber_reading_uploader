@@ -243,8 +243,8 @@ class TibberUploader:
 
 if __name__ == "__main__":
     # Anmeldeinformationen aus Umgebungsvariablen lesen
-    email = os.getenv('TIBBER_EMAIL')
-    password = os.getenv('TIBBER_PASSWORD')
+    email = os.getenv('EMAIL')
+    password = os.getenv('PASSWORD')
 
     # Überprüfen, ob Anmeldeinformationen vorhanden sind
     if not email or not password:
