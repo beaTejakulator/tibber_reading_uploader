@@ -32,6 +32,3 @@ COPY rootfs /
 
 # Stellen Sie sicher, dass das Startskript ausführbar ist
 RUN chmod a+x /etc/services.d/example/run
-
-# Definieren Sie das Startkommando
-CMD [ "/etc/services.d/example/run" ]
