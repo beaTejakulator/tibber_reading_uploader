@@ -5,7 +5,7 @@ FROM $BUILD_FROM
 # Setzen Sie Umgebungsvariablen
 ENV LANG C.UTF-8
 
-# Installieren Sie notwendige Pakete und Werkzeuge, einschließlich Cron
+# Installieren Sie notwendige Pakete und Werkzeuge, einschließlich Cronie anstelle von Cron
 RUN apk add --no-cache \
     udev \
     curl \
@@ -15,7 +15,7 @@ RUN apk add --no-cache \
     musl-dev \
     python3-dev \
     libffi-dev \
-    cron
+    cronie
 
 # Installieren Sie Python-Module aus der requirements.txt-Datei
 COPY requirements.txt /
