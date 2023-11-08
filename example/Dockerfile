@@ -38,4 +38,4 @@ COPY mycron /etc/crontabs/root
 RUN chmod a+x /etc/services.d/example/run
 
 # Führen Sie den Cron-Daemon aus
-CMD ["crond", "-f", "-d", "8"]
+CMD ["crond", "-d", "8"]
