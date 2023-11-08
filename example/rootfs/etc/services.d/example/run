@@ -16,12 +16,7 @@ echo "==========================================================================
 # Starten Sie den Service
 python3 /usr/bin/main.py
 
-# Log the end time
-echo "=================================================================================================="
-echo -e "################ \e[32mStarting Tibber Uploader service at $(date)\e[0m ################"
-echo "=================================================================================================="
-
-echo -e "\e[32mNächster Übermittlung um 01:00 Uhr\e[0m"
+echo -e "\e[32mNächste Übermittlung um 01:00 Uhr\e[0m"
 
 
 # Warten Sie bis 01:00 Uhr morgens
