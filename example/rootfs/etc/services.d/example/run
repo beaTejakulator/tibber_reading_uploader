@@ -1,36 +1,53 @@
 #!/usr/bin/with-contenv bashio
 # ==============================================================================
-# Set environment variables from the add-on configuration
+# Startet den Tibber Uploader Service zu einer bestimmten Tageszeit
 # ==============================================================================
+
+# Setzen Sie die gewünschte Startzeit (24-Stunden-Format)
+TARGET_HOUR=1
+TARGET_MINUTE=0
+
+# Set environment variables from the add-on configuration
 export METER_SENSOR=$(bashio::config 'meter_sensor')
 export EMAIL=$(bashio::config 'email')
 export PASSWORD=$(bashio::config 'password')
 
-# Log the start time and environment variables
-echo "=================================================================================================="
-echo "################ Starting Tibber Uploader service at $(date)" ################
-echo "=================================================================================================="
+# Endlosschleife
+while true; do
+  # Aktuelle Stunde und Minute abrufen
+  CURRENT_HOUR=$(date +"%H")
+  CURRENT_MINUTE=$(date +"%M")
 
-# Berechnen Sie die nächste Ausführungszeit für 1:00 Uhr
-next_run=$(date -d '01:00' +%s)
-current_time=$(date +%s)
+  # Berechnen, wie lange gewartet werden muss, bis die Zielzeit erreicht ist
+  CURRENT_TIME=$(date +%s)
+  TARGET_TIME=$(date -d "$TARGET_HOUR:$TARGET_MINUTE" +%s)
+  SLEEP_TIME=$((TARGET_TIME - CURRENT_TIME))
 
-# Überprüfen Sie, ob die aktuelle Zeit nach 1:00 Uhr liegt
-if [ "$current_time" -ge "$next_run" ]; then
-    # Berechnen Sie die nächste Ausführungszeit für 1:00 Uhr am nächsten Tag
-    next_run=$(date -d 'tomorrow 01:00' +%s)
-fi
+  # Wenn die Schlafzeit negativ ist, bedeutet das, dass die Zielzeit heute bereits vorbei ist
+  # Wir müssen also bis zur Zielzeit am nächsten Tag warten
+  if [ "$SLEEP_TIME" -lt 0 ]; then
+    # Berechnen Sie die Zeit bis Mitternacht plus die Zeit bis zur Zielzeit am nächsten Tag
+    MIDNIGHT=$(date -d "tomorrow 00:00" +%s)
+    SLEEP_TIME=$((MIDNIGHT - CURRENT_TIME + TARGET_HOUR * 3600 + TARGET_MINUTE * 60))
+  fi
 
-# Warten, bis es Zeit ist, das Skript auszuführen
-while [ "$current_time" -lt "$next_run" ]; do
-    sleep 60
-    current_time=$(date +%s)
+  # Warten bis zur Zielzeit
+  echo "Nächster Start des Tibber Uploader Service ist geplant für $(date -d "@$((CURRENT_TIME + SLEEP_TIME))")"
+  sleep "$SLEEP_TIME"
+
+  # Log the start time and environment variables
+  echo "=================================================================================================="
+  echo "################ Starting Tibber Uploader service at $(date)" ################
+  echo "=================================================================================================="
+
+  # Starten Sie den Service
+  python3 /usr/bin/main.py
+
+  # Log the end time
+  echo "=================================================================================================="
+  echo "################ Tibber Uploader service finished at $(date)" ################
+  echo "=================================================================================================="
+
+  # Warten bis zur nächsten möglichen Ausführungszeit, um Mehrfachausführungen zu verhindern
+  sleep 60
 done
-
-# Start the main script without redirecting stdout and stderr
-python3 /usr/bin/main.py
-
-# Log the end time
-echo "=================================================================================================="
-echo "################ Tibber Uploader service finished at $(date)" ################
-echo "=================================================================================================="
