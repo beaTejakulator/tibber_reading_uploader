@@ -1,7 +1,7 @@
 #!/usr/bin/with-contenv bashio
 # ==============================================================================
-# Stoppt den Tibber Uploader Service und verhindert einen Neustart
+# Prevent the service from restarting after it exits
 # ==============================================================================
 
-# Setzen Sie den Exit-Code auf 0, um einen Neustart zu verhindern
-exit 0
+# Tell s6 not to restart the service
+s6-svscanctl -t /var/run/s6/services
