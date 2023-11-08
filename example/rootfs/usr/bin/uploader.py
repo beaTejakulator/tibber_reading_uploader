@@ -1,6 +1,9 @@
 # uploader.py
 import requests
+import logging
 from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 class TibberUploader:
     def __init__(self, token, hass_interactions, meter_sensor):
