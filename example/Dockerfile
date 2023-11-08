@@ -5,7 +5,7 @@ FROM $BUILD_FROM
 # Setzen Sie Umgebungsvariablen
 ENV LANG C.UTF-8
 
-# Installieren Sie notwendige Pakete und Werkzeuge
+# Installieren Sie notwendige Pakete und Werkzeuge, einschließlich Cron
 RUN apk add --no-cache \
     udev \
     curl \
@@ -15,7 +15,6 @@ RUN apk add --no-cache \
     musl-dev \
     python3-dev \
     libffi-dev \
-    # Fügen Sie cron hinzu
     cron
 
 # Installieren Sie Python-Module aus der requirements.txt-Datei
@@ -32,11 +31,11 @@ RUN \
 # Kopieren Sie das rootfs-Verzeichnis in das Image
 COPY rootfs /
 
-# Stellen Sie sicher, dass das Startskript ausführbar ist
-RUN chmod a+x /etc/services.d/example/run
-
 # Kopieren Sie die Cron-Job-Datei in den Container
 COPY mycron /etc/crontabs/root
+
+# Stellen Sie sicher, dass das Startskript ausführbar ist
+RUN chmod a+x /etc/services.d/example/run
 
 # Führen Sie den Cron-Daemon aus
 CMD ["crond", "-f", "-d", "8"]
