@@ -3,6 +3,22 @@
 # Startet den Tibber Uploader Service zu einer bestimmten Tageszeit
 # ==============================================================================
 
+# Funktion zum Warten bis 01:00 Uhr morgens
+wait_until_1_am() {
+    local current_time
+    local target_time
+    target_time=$(date -d '01:00' +%s)
+    current_time=$(date +%s)
+    local time_until_1_am=$((target_time - current_time))
+    
+    if ((time_until_1_am <= 0)); then
+        # Es ist bereits nach 01:00 Uhr, daher warten Sie bis zum nächsten Tag
+        time_until_1_am=$((time_until_1_am + 24 * 3600))
+    fi
+    
+    s6-sleep "$time_until_1_am"s
+}
+
 # Set environment variables from the add-on configuration
 export METER_SENSOR=$(bashio::config 'meter_sensor')
 export EMAIL=$(bashio::config 'email')
@@ -21,19 +37,5 @@ echo "==========================================================================
 echo "################ Tibber Uploader service finished at $(date)" ################
 echo "=================================================================================================="
 
-# Funktion zum Warten bis 01:00 Uhr morgens
-wait_until_1_am() {
-    local current_time
-    local target_time
-    target_time=$(date -d '01:00' +%s)
-    current_time=$(date +%s)
-    local time_until_1_am=$((target_time - current_time))
-    
-    if ((time_until_1_am <= 0)); then
-        # Es ist bereits nach 01:00 Uhr, daher warten Sie bis zum nächsten Tag
-        time_until_1_am=$((time_until_1_am + 24 * 3600))
-    fi
-    
-    s6-sleep "$time_until_1_am"s
-}
-
+# Warten Sie bis 01:00 Uhr morgens
+wait_until_1_am
