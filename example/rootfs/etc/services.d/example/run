@@ -10,7 +10,7 @@ export PASSWORD=$(bashio::config 'password')
 
 # Log the start time and environment variables
 echo "=================================================================================================="
-echo "################ Starting Tibber Uploader service at $(date)" ################
+echo "################ Starting Tibber Uploader service at $(date) ################"
 echo "=================================================================================================="
 
 # Starten Sie den Service
@@ -18,7 +18,7 @@ python3 /usr/bin/main.py
 
 # Log the end time
 echo "=================================================================================================="
-echo "################ Tibber Uploader service finished at $(date)" ################
+echo "################ Tibber Uploader service finished at $(date) ################"
 echo "=================================================================================================="
 
 # Warten Sie bis 01:00 Uhr morgens
