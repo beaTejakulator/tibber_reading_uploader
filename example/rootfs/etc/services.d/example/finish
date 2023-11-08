@@ -1,0 +1,7 @@
+#!/usr/bin/with-contenv bashio
+# ==============================================================================
+# Stoppt den Tibber Uploader Service und verhindert einen Neustart
+# ==============================================================================
+
+# Setzen Sie den Exit-Code auf 0, um einen Neustart zu verhindern
+exit 0
