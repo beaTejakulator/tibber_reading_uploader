@@ -3,6 +3,13 @@ import requests
 import logging
 from datetime import datetime, timedelta
 
+# Konfigurieren Sie das Logging mit einem einfacheren Format
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',  # Hier entfernen wir den Logger-Namen und das Level
+    datefmt='%Y-%m-%d %H:%M:%S'  # Sie können das Datum- und Zeitformat hier anpassen
+)
+
 logger = logging.getLogger(__name__)
 
 class TibberUploader:
