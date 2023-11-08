@@ -81,8 +81,8 @@ class TibberUploader:
         }
 
         # Senden Sie die Anfrage an die Tibber API
-        tibber_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_data)
-        if tibber_response.status_code != 200:
+        tibber_mutation_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_mutation_data)
+        if tibber_mutation_response.status_code != 200:
             return
 
         # Extrahieren Sie die meter_id und register_id dynamisch
