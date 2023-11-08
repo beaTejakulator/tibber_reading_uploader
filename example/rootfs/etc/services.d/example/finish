@@ -5,11 +5,11 @@
 
 declare -i APP_EXIT_CODE=${1}
 
-# If the service exit code is not 0 or 256, halt the system
+# Wenn der Service-Exit-Code nicht 0 oder 256 ist, beende das System
 if (( APP_EXIT_CODE != 0 && APP_EXIT_CODE != 256 )); then
-  bashio::log.warning "Halting add-on with exit code ${APP_EXIT_CODE}"
+  bashio::log.warning "Halte das Add-On mit Exit-Code ${APP_EXIT_CODE}"
   echo "${APP_EXIT_CODE}" > /run/s6-linux-init-container-results/exitcode
   exec /run/s6/basedir/bin/halt
 else
-  bashio::log.info "Service example will restart after exit"
+  bashio::log.info "Der Service wird nach dem Beenden neu gestartet"
 fi
