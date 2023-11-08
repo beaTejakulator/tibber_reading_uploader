@@ -20,16 +20,13 @@ while true; do
 
   # Berechnen, wie lange gewartet werden muss, bis die Zielzeit erreicht ist
   CURRENT_TIME=$(date +%s)
+  # Berechnen Sie die Zeit bis zur Zielzeit heute
   TARGET_TIME=$(date -d "$TARGET_HOUR:$TARGET_MINUTE" +%s)
-  SLEEP_TIME=$((TARGET_TIME - CURRENT_TIME))
-
-  # Wenn die Schlafzeit negativ ist, bedeutet das, dass die Zielzeit heute bereits vorbei ist
-  # Wir müssen also bis zur Zielzeit am nächsten Tag warten
-  if [ "$SLEEP_TIME" -lt 0 ]; then
-    # Berechnen Sie die Zeit bis Mitternacht plus die Zeit bis zur Zielzeit am nächsten Tag
-    MIDNIGHT=$(date -d "tomorrow 00:00" +%s)
-    SLEEP_TIME=$((MIDNIGHT - CURRENT_TIME + TARGET_HOUR * 3600 + TARGET_MINUTE * 60))
+  # Wenn die Zielzeit heute schon vorbei ist, addieren Sie 24 Stunden (86400 Sekunden)
+  if [ "$CURRENT_TIME" -gt "$TARGET_TIME" ]; then
+    TARGET_TIME=$((TARGET_TIME + 86400))
   fi
+  SLEEP_TIME=$((TARGET_TIME - CURRENT_TIME))
 
   # Warten bis zur Zielzeit
   echo "Nächster Start des Tibber Uploader Service ist geplant für $(date -d "@$((CURRENT_TIME + SLEEP_TIME))")"
