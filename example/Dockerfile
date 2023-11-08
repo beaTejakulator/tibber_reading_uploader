@@ -14,7 +14,9 @@ RUN apk add --no-cache \
     gcc \
     musl-dev \
     python3-dev \
-    libffi-dev
+    libffi-dev \
+    # Fügen Sie cron hinzu
+    cron
 
 # Installieren Sie Python-Module aus der requirements.txt-Datei
 COPY requirements.txt /
@@ -32,3 +34,6 @@ COPY rootfs /
 
 # Stellen Sie sicher, dass das Startskript ausführbar ist
 RUN chmod a+x /etc/services.d/example/run
+
+# Stellen Sie sicher, dass der Cron-Dienst beim Start des Containers läuft
+CMD ["crond", "-f", "-d", "8"]
