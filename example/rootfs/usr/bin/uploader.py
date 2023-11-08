@@ -150,8 +150,22 @@ class TibberUploader:
                 "value": rounded_value  # Verwenden Sie den gerundeten Wert
             },
         }
+
+        # Überprüfen Sie die API-Antwort und geben Sie die "descriptionHtml" aus, falls verfügbar
+        tibber_response_data = tibber_mutation_response.json()
+        success = tibber_response_data.get('data', {}).get('me', {}).get('addMeterReadings', {}).get('success', {})
+        description_html = success.get('descriptionHtml')
         
-        # Senden Sie die Mutation-Anfrage an die Tibber API
-        tibber_mutation_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_mutation_data)
+        # Wenn "descriptionHtml" verfügbar ist, geben Sie es im Protokoll aus
+        if description_html:
+            logger.info(f"Tibber API-Antwort: {description_html}")
+        
+        # Wenn der Upload erfolgreich war, geben Sie eine Protokollmeldung aus
+        if tibber_mutation_response.status_code == 200 and success:
+            # Datum und Uhrzeit von Home Assistant abrufen
+            reading_date = self.hass_interactions.get_reading_date()
+            logger.info(f"Zählerstand ({rounded_value}) wurde am {reading_date} übermittelt")
+        
+        # Beenden Sie die Funktion, wenn die API-Antwort einen Statuscode ungleich 200 hat
         if tibber_mutation_response.status_code != 200:
             return
