@@ -14,18 +14,12 @@ Eine Entität in Home Assistant, die den aktuellen Zählerstand des Stromzähler
 
 ## Installation
 
- 1. Fügen Sie dieses Repository zu Ihrem Home Assistant hinzu, indem Sie die URL https://github.com/beaTejakulator/tibber_reading_uploader verwenden.
+ 1. Fügen Sie dieses Repository zu Ihrem Home Assistant hinzu, indem Sie die [URL](https://github.com/beaTejakulator/tibber_reading_uploader) verwenden.
  2. Installieren Sie das Add-on über die Home Assistant Add-on-Store-Schnittstelle.
  3. Konfigurieren Sie das Add-on mit den erforderlichen Umgebungsvariablen: 
- EMAIL
- PASSWORD
- METER_SENSOR.
-
-
-
-
-
-
+ * EMAIL  
+ * PASSWORD  
+ * METER_SENSOR
 
 [![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FbeaTejakulator%2Ftibber_reading_uploader)
 
