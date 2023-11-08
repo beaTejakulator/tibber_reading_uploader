@@ -29,6 +29,12 @@ RUN \
     "https://github.com/home-assistant/tempio/releases/download/${TEMPIO_VERSION}/tempio_${BUILD_ARCH}" \
     && chmod a+x /usr/bin/tempio
 
+# Kopieren Sie das rootfs-Verzeichnis in das Image
+COPY rootfs /
+
+# Stellen Sie sicher, dass das Startskript ausführbar ist
+RUN chmod a+x /etc/services.d/example/run
+
 # Kopieren Sie die Cron-Job-Datei in den Container
 COPY mycron /etc/crontabs/root
 
