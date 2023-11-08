@@ -80,9 +80,9 @@ class TibberUploader:
             },
         }
 
-        # Senden Sie die Anfrage an die Tibber API
-        tibber_mutation_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_mutation_data)
-        if tibber_mutation_response.status_code != 200:
+        # Senden Sie die Anfrage an die Tibber API, um Account-Informationen zu erhalten
+        tibber_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_data)
+        if tibber_response.status_code != 200:
             return
 
         # Extrahieren Sie die meter_id und register_id dynamisch
@@ -151,6 +151,11 @@ class TibberUploader:
             },
         }
 
+        # Senden Sie die Anfrage an die Tibber API
+        tibber_mutation_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_mutation_data)
+        if tibber_mutation_response.status_code != 200:
+            return
+        
         # Überprüfen Sie die API-Antwort und geben Sie die "descriptionHtml" aus, falls verfügbar
         tibber_response_data = tibber_mutation_response.json()
         success = tibber_response_data.get('data', {}).get('me', {}).get('addMeterReadings', {}).get('success', {})
@@ -168,4 +173,5 @@ class TibberUploader:
         
         # Beenden Sie die Funktion, wenn die API-Antwort einen Statuscode ungleich 200 hat
         if tibber_mutation_response.status_code != 200:
+            logger.error(f"Fehler beim Hochladen des Zählerstands: {tibber_mutation_response.text}")
             return
