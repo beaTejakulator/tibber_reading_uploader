@@ -11,7 +11,7 @@ arch:
   - amd64
   - i386
 homeassistant_api: true
-host_network: true
+# host_network: true
 init: false
 map:
   - share:rw
