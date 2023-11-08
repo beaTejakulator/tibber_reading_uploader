@@ -37,6 +37,9 @@ COPY mycron /etc/crontabs/root
 # Stellen Sie sicher, dass das Startskript ausführbar ist
 RUN chmod a+x /etc/services.d/example/run
 
+# Stellen Sie sicher, dass das Endskript ausführbar ist
+RUN chmod a+x /etc/services.d/example/finish
+
 # Führen Sie den Cron-Daemon aus
 CMD ["crond", "-n"]
 
