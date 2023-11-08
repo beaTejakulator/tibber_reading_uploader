@@ -1,12 +1,12 @@
 # Tibber Reading Uploader für Home Assistant
 
-Überblick
+## Überblick
 Der Tibber Reading Uploader ist ein Add-on für Home Assistant, das es ermöglicht, Energieverbrauchsdaten automatisch an Tibber zu senden. Dies ist besonders nützlich für Tibber-Kunden, die ihren Energieverbrauch in Echtzeit überwachen und optimieren möchten.
 
-Funktionsweise
+## Funktionsweise
 Das Add-on liest die Verbrauchsdaten einer spezifizierten Entität, die den Stromzählerstand repräsentiert, und übermittelt diese Daten über die Tibber API an Tibber. Es nutzt die Home Assistant Services, um mit dem Home Assistant Supervisor zu interagieren und benötigt gültige Anmeldeinformationen für die Authentifizierung bei Tibber.
 
-Voraussetzungen
+## Voraussetzungen
 Ein Home Assistant-System mit Supervisor.
 Gültige Tibber-Anmeldeinformationen (E-Mail und Passwort).
 Eine Entität in Home Assistant, die den aktuellen Zählerstand des Stromzählers darstellt.
@@ -23,7 +23,7 @@ Installation
 ![Supports armv7 Architecture][armv7-shield]
 ![Supports i386 Architecture][i386-shield]
 
-Konfiguration
+## Konfiguration
 Konfigurieren Sie das Add-on, indem Sie die folgenden Umgebungsvariablen in Home Assistant setzen:
 
 makefile
@@ -34,10 +34,10 @@ METER_SENSOR=IhreZählerstandEntität
 Nutzung
 Nach der Installation und Konfiguration wird das Add-on automatisch die Verbrauchsdaten an Tibber senden, basierend auf dem Zählerstand, der von der angegebenen Entität bereitgestellt wird. Überprüfen Sie die Protokolle des Add-ons, um sicherzustellen, dass der Upload-Prozess erfolgreich gestartet wurde.
 
-Beitrag
+## Beitrag
 Wenn Sie zum Projekt beitragen möchten, können Sie Pull Requests stellen oder Issues im GitHub-Repository eröffnen.
 
-Lizenz
+## Lizenz
 Dieses Add-on ist unter der MIT-Lizenz veröffentlicht. Weitere Details finden Sie in der LICENSE-Datei im Repository.
 
 
