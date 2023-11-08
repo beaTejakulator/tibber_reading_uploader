@@ -1,6 +1,6 @@
 # uploader.py
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class TibberUploader:
     def __init__(self, token, hass_interactions, meter_sensor):
