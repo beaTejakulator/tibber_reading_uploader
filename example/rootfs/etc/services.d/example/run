@@ -6,19 +6,35 @@ export METER_SENSOR=$(bashio::config 'meter_sensor')
 export EMAIL=$(bashio::config 'email')
 export PASSWORD=$(bashio::config 'password')
 
-# Log the start time and environment variables
-# echo "METER_SENSOR: $METER_SENSOR"
-# echo "EMAIL: $EMAIL"
-# Don't log the password for security reasons
-# echo "PASSWORD: $PASSWORD"
+# Funktion, die Ihr Skript ausführt
+run_my_job() {
+  echo "=================================================================================================="
+  echo "################ Starting Tibber Uploader service at $(date)" ################
+  echo "=================================================================================================="
+  python3 /usr/bin/main.py
+  echo "=================================================================================================="
+  echo "################ Tibber Uploader service finished at $(date)" ################
+  echo "=================================================================================================="
+}
 
-# Start the main script without redirecting stdout and stderr
-echo "=================================================================================================="
-echo "################ Starting Tibber Uploader service at $(date)" ################
-echo "=================================================================================================="
-python3 /usr/bin/main.py
-
-# Log the end time
-echo "=================================================================================================="
-echo "################ Tibber Uploader service finished at $(date)" ################
-echo "=================================================================================================="
+# Endlosschleife
+while true; do
+  # Aktuelle Zeit
+  current_time=$(date +%s)
+  
+  # Nächste Ausführungszeit: Heute um 01:00 AM oder morgen, wenn es schon vorbei ist
+  next_run=$(date -d 'tomorrow 01:00' +%s)
+  if [ "$current_time" -ge "$next_run" ]; then
+    next_run=$(date -d '2 days 01:00' +%s)
+  fi
+  
+  # Wartezeit bis zum nächsten Lauf in Sekunden
+  wait_seconds=$((next_run - current_time))
+  echo "Warte $wait_seconds Sekunden bis zum nächsten Lauf."
+  
+  # Warten bis zum nächsten Lauf
+  sleep $wait_seconds
+  
+  # Führen Sie die Aufgabe aus
+  run_my_job
+done
