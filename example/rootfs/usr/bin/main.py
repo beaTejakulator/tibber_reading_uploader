@@ -38,8 +38,8 @@ if __name__ == "__main__":
     # TibberUploader-Instanz erstellen und Ausführung starten
     try:
         uploader = TibberUploader(token, hass_interactions, meter_sensor)  # Hier den meter_sensor übergeben
-        uploader.upload_reading()
-        logger.info("Upload-Prozess erfolgreich gestartet.")
+        logger.info("Upload-Prozess erfolgreich gestartet.")  # Meldung vor dem Start des Upload-Prozesses
+        uploader.upload_reading()  # Upload-Prozess starten
     except Exception as e:
         logger.error(f"Fehler beim Starten des Upload-Prozesses: {e}")
         raise
