@@ -7,14 +7,18 @@ export EMAIL=$(bashio::config 'email')
 export PASSWORD=$(bashio::config 'password')
 
 # Log the start time and environment variables
-echo "METER_SENSOR: $METER_SENSOR"
-echo "EMAIL: $EMAIL"
+# echo "METER_SENSOR: $METER_SENSOR"
+# echo "EMAIL: $EMAIL"
 # Don't log the password for security reasons
 # echo "PASSWORD: $PASSWORD"
 
 # Start the main script without redirecting stdout and stderr
-echo "Starting Tibber Uploader service at $(date)"
+echo "=============================================================================="
+echo "################ Starting Tibber Uploader service at $(date)" ################
+echo "=============================================================================="
 python3 /usr/bin/main.py
 
 # Log the end time
-echo "Tibber Uploader service finished at $(date)"
+echo "=============================================================================="
+echo "################ Tibber Uploader service finished at $(date)" ################
+echo "=============================================================================="
