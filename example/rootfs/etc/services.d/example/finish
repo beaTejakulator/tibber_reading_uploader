@@ -1,7 +1,15 @@
 #!/usr/bin/with-contenv bashio
 # ==============================================================================
-# Prevent the service from restarting after it exits
+# Stop the S6 supervision tree if the example service exits unexpectedly
 # ==============================================================================
 
-# Tell s6 not to restart the service
-s6-svscanctl -t /run/s6/services
+declare -i APP_EXIT_CODE=${1}
+
+# If the service exit code is not 0 or 256, halt the system
+if (( APP_EXIT_CODE != 0 && APP_EXIT_CODE != 256 )); then
+  bashio::log.warning "Halting add-on with exit code ${APP_EXIT_CODE}"
+  echo "${APP_EXIT_CODE}" > /run/s6-linux-init-container-results/exitcode
+  exec /run/s6/basedir/bin/halt
+else
+  bashio::log.info "Service example will restart after exit"
+fi
