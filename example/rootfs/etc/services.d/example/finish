@@ -4,4 +4,4 @@
 # ==============================================================================
 
 # Tell s6 not to restart the service
-s6-svscanctl -t /var/run/s6/services
+s6-svscanctl -t /run/s6/services
