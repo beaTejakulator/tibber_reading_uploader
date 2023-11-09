@@ -35,10 +35,10 @@ COPY rootfs /
 COPY mycron /etc/crontabs/root
 
 # Stellen Sie sicher, dass das Startskript ausführbar ist
-RUN chmod a+x /etc/services.d/example/run
+RUN chmod a+x /etc/services.d/tibber_reading_uploader/run
 
 # Stellen Sie sicher, dass das Endskript ausführbar ist
-RUN chmod a+x /etc/services.d/example/finish
+RUN chmod a+x /etc/services.d/tibber_reading_uploader/finish
 
 # Führen Sie den Cron-Daemon aus
 CMD ["crond", "-n"]
