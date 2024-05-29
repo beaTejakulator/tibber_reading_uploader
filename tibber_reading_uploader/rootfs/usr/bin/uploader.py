@@ -1,15 +1,13 @@
-# uploader.py
 import requests
 import logging
 from datetime import datetime, timedelta
 
-# Konfigurieren Sie das Logging mit einem einfacheren Format
+# Konfigurieren Sie das Logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(message)s',  # Hier entfernen wir den Logger-Namen und das Level
-    datefmt='%Y-%m-%d %H:%M:%S'  # Sie können das Datum- und Zeitformat hier anpassen
+    format='%(asctime)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
 )
-
 logger = logging.getLogger(__name__)
 
 class TibberUploader:
@@ -17,19 +15,10 @@ class TibberUploader:
         self.token = token
         self.hass_interactions = hass_interactions
         self.meter_sensor = meter_sensor
+        self.meter_id = None
+        self.register_id = None
 
-    def upload_reading(self):
-        # Datum und Uhrzeit von Home Assistant abrufen
-        reading_date = self.hass_interactions.get_reading_date()
-
-        # Datum für gestern und heute berechnen
-        yesterday_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-        current_date = datetime.now().strftime("%Y-%m-%d")
-
-        # Zählerstand vom angegebenen Sensor abrufen
-        meter_reading = self.hass_interactions.get_meter_reading(self.meter_sensor)
-
-        # Tibber API-Abfrage für "meterId" und "registerId"
+    def get_account_info(self, from_date, to_date):
         tibber_url = "https://app.tibber.com/v4/gql"
         tibber_headers = {
             "Authorization": f"Bearer {self.token}",
@@ -85,44 +74,49 @@ class TibberUploader:
                 }
             """,
             "variables": {
-                "readingsFromDate": yesterday_date,
-                "readingsToDate": current_date
+                "readingsFromDate": from_date,
+                "readingsToDate": to_date
             },
         }
+        response = requests.post(tibber_url, headers=tibber_headers, json=tibber_data)
+        response.raise_for_status()
+        return response.json()
 
-        # Senden Sie die Anfrage an die Tibber API, um Account-Informationen zu erhalten
-        tibber_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_data)
-        if tibber_response.status_code != 200:
-            return
-
-        # Extrahieren Sie die meter_id und register_id dynamisch
-        tibber_response_data = tibber_response.json()
-        homes = tibber_response_data['data']['me']['homes']
-        meters_items = tibber_response_data['data']['me']['meters']['items']
-        
-        # Angenommen, Sie möchten die meter_id und register_id des aktuellen Zählers extrahieren
+    def extract_meter_info(self, account_info):
+        homes = account_info['data']['me']['homes']
+        meters_items = account_info['data']['me']['meters']['items']
         for home in homes:
             current_meter_id = home.get('currentMeter', {}).get('id')
             if current_meter_id:
-                # Finden Sie das entsprechende Meter-Objekt in den Meter-Items
                 for item in meters_items:
                     meter = item.get('meter')
                     if meter and meter.get('id') == current_meter_id:
-                        # Angenommen, Sie möchten die erste Register-ID aus diesem Meter extrahieren
-                        register_id = meter['registers'][0]['id']
-                        # Setzen Sie die gefundenen IDs als Eigenschaften des Uploader-Objekts
                         self.meter_id = current_meter_id
-                        self.register_id = register_id
-                        break
-                else:
-                    break
-            else:
-                return  # Beenden Sie die Funktion, da kein weiterer Fortschritt möglich ist
-        
-        # Runden Sie den Wert, bevor Sie ihn hochladen
+                        self.register_id = meter['registers'][0]['id']
+                        return
+        raise ValueError("Konnte keine gültige meter_id oder register_id finden.")
+
+    def upload_reading(self):
+        reading_date = self.hass_interactions.get_reading_date()
+        yesterday_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+        current_date = datetime.now().strftime("%Y-%m-%d")
+
+        meter_reading = self.hass_interactions.get_meter_reading(self.meter_sensor)
+
+        try:
+            account_info = self.get_account_info(yesterday_date, current_date)
+            self.extract_meter_info(account_info)
+        except Exception as e:
+            logger.error(f"Fehler beim Abrufen der Account-Informationen: {e}")
+            return
+
         rounded_value = round(float(meter_reading))
 
-        # Now perform the mutation to add the meter reading
+        tibber_url = "https://app.tibber.com/v4/gql"
+        tibber_headers = {
+            "Authorization": f"Bearer {self.token}",
+            "Content-Type": "application/json",
+        }
         tibber_mutation_data = {
             "query": """
                 mutation AddMeterReadings($meterId: String!, $readingDate: String!, $registerId: String!, $value: Float!) {
@@ -157,31 +151,23 @@ class TibberUploader:
                 "meterId": self.meter_id,
                 "readingDate": reading_date,
                 "registerId": self.register_id,
-                "value": rounded_value  # Verwenden Sie den gerundeten Wert
+                "value": rounded_value
             },
         }
 
-        # Senden Sie die Anfrage an die Tibber API
-        tibber_mutation_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_mutation_data)
-        if tibber_mutation_response.status_code != 200:
+        try:
+            tibber_mutation_response = requests.post(tibber_url, headers=tibber_headers, json=tibber_mutation_data)
+            tibber_mutation_response.raise_for_status()
+        except requests.RequestException as e:
+            logger.error(f"Fehler beim Hochladen des Zählerstands: {e}")
             return
-        
-        # Überprüfen Sie die API-Antwort und geben Sie die "descriptionHtml" aus, falls verfügbar
-        tibber_response_data = tibber_mutation_response.json()
-        success = tibber_response_data.get('data', {}).get('me', {}).get('addMeterReadings', {}).get('success', {})
+
+        response_data = tibber_mutation_response.json()
+        success = response_data.get('data', {}).get('me', {}).get('addMeterReadings', {}).get('success', {})
         description_html = success.get('descriptionHtml')
-        
-        # Wenn "descriptionHtml" verfügbar ist, geben Sie es im Protokoll aus
+
         if description_html:
             logger.info(f"Tibber API-Antwort: {description_html}")
-        
-        # Wenn der Upload erfolgreich war, geben Sie eine Protokollmeldung aus
-        if tibber_mutation_response.status_code == 200 and success:
-            # Datum und Uhrzeit von Home Assistant abrufen
-            reading_date = self.hass_interactions.get_reading_date()
+
+        if success:
             logger.info(f"Zählerstand ({rounded_value}) wurde am {reading_date} übermittelt")
-        
-        # Beenden Sie die Funktion, wenn die API-Antwort einen Statuscode ungleich 200 hat
-        if tibber_mutation_response.status_code != 200:
-            logger.error(f"Fehler beim Hochladen des Zählerstands: {tibber_mutation_response.text}")
-            return
