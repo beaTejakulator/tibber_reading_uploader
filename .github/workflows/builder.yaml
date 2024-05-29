@@ -112,9 +112,6 @@ jobs:
           mkdir -p ~/.rekor
         shell: bash
 
-    - name: Verify Cache Cleared
-      run: ls -la ~/.rekor
-      shell: bash
 
       - name: Build ${{ matrix.addon }} add-on
         if: steps.check.outputs.build_arch == 'true'
