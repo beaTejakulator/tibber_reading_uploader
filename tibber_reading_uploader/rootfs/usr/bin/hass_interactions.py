@@ -12,10 +12,8 @@ class HASSInteractions:
     def get_state(self, entity_id: str) -> str:
         """Retrieve the state of a given entity from Home Assistant."""
         response = requests.get(f"{self.hass_url}{entity_id}", headers=self.headers)
-        if response.status_code == 200:
-            return response.json()['state']
-        else:
-            raise ValueError(f"Failed to get state for {entity_id}: {response.status_code}")
+        response.raise_for_status()
+        return response.json().get('state', '')
 
     def get_reading_date(self) -> str:
         """Get the current date and time from Home Assistant."""
@@ -24,4 +22,7 @@ class HASSInteractions:
     def get_meter_reading(self, meter_sensor: str) -> float:
         """Get the meter reading from a specified sensor."""
         meter_reading = self.get_state(meter_sensor)
-        return float(meter_reading)
+        try:
+            return float(meter_reading)
+        except ValueError:
+            raise ValueError(f"Invalid meter reading value: {meter_reading}")
