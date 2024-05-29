@@ -56,6 +56,7 @@ jobs:
           else
             echo "No add-on had any monitored files changed (${{ env.MONITORED_FILES }})";
           fi
+
   build:
     needs: init
     runs-on: ubuntu-latest
@@ -103,15 +104,10 @@ jobs:
           rm -rf ~/.rekor
           mkdir -p ~/.rekor
         shell: bash
-  
+
       - name: Verify Cache Cleared
         run: ls -la ~/.rekor
-        shell: bash    - name: Clear Rekor Cache
-        run: |
-          rm -rf ~/.rekor
-          mkdir -p ~/.rekor
         shell: bash
-
 
       - name: Build ${{ matrix.addon }} add-on
         if: steps.check.outputs.build_arch == 'true'
