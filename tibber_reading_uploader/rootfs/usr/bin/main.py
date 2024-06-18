@@ -1,5 +1,7 @@
 import os
 import logging
+import socket
+import time
 from auth import get_tibber_token
 from uploader import TibberUploader
 from hass_interactions import HASSInteractions  # Sie benötigen HASSInteractions
@@ -8,7 +10,27 @@ from hass_interactions import HASSInteractions  # Sie benötigen HASSInteraction
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def is_connected():
+    try:
+        socket.create_connection(("8.8.8.8", 53))
+        return True
+    except OSError:
+        return False
+
+MAX_RETRIES = 60  # Erhöht auf 60 Versuche
+RETRY_DELAY = 5   # 5 Sekunden Verzögerung
+
 if __name__ == "__main__":
+    retries = 0
+    while not is_connected() and retries < MAX_RETRIES:
+        logger.info(f"Keine Internetverbindung. Warte {RETRY_DELAY} Sekunden... (Versuch {retries + 1}/{MAX_RETRIES})")
+        time.sleep(RETRY_DELAY)
+        retries += 1
+
+    if not is_connected():
+        logger.error("Fehler: Keine Internetverbindung nach mehreren Versuchen.")
+        exit(1)
+
     # Anmeldeinformationen aus Umgebungsvariablen lesen
     email = os.getenv('EMAIL')
     password = os.getenv('PASSWORD')
