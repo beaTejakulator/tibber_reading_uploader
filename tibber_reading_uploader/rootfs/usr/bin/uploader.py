@@ -161,7 +161,7 @@ class TibberUploader:
         except requests.RequestException as e:
             logger.error(f"Fehler beim Hochladen des Zählerstands: {e}")
             return
-
+        
         response_data = tibber_mutation_response.json()
         success = response_data.get('data', {}).get('me', {}).get('addMeterReadings', {}).get('success')
         
@@ -173,4 +173,3 @@ class TibberUploader:
             logger.info(f"Zählerstand ({rounded_value}) wurde am {reading_date} übermittelt")
         else:
             logger.warning("Keine erfolgreiche Antwort von Tibber erhalten oder unerwartetes Antwortformat.")
-
