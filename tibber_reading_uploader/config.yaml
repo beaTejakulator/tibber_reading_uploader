@@ -1,6 +1,6 @@
 # https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
 name: Tibber Reading Uploader
-version: "1.5.1"
+version: "1.6.0"
 slug: tibber-reading-uploader
 description: Uploads meter readings to Tibber
 url: "https://github.com/beaTejakulator/tibber_reading_uploader/tree/main/example"
