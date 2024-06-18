@@ -163,11 +163,14 @@ class TibberUploader:
             return
 
         response_data = tibber_mutation_response.json()
-        success = response_data.get('data', {}).get('me', {}).get('addMeterReadings', {}).get('success', {})
-        description_html = success.get('descriptionHtml')
-
-        if description_html:
-            logger.info(f"Tibber API-Antwort: {description_html}")
-
-        if success:
+        success = response_data.get('data', {}).get('me', {}).get('addMeterReadings', {}).get('success')
+        
+        if success is not None:
+            description_html = success.get('descriptionHtml')
+            if description_html:
+                logger.info(f"Tibber API-Antwort: {description_html}")
+        
             logger.info(f"Zählerstand ({rounded_value}) wurde am {reading_date} übermittelt")
+        else:
+            logger.warning("Keine erfolgreiche Antwort von Tibber erhalten oder unerwartetes Antwortformat.")
+
