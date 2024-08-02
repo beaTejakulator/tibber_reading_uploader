@@ -83,17 +83,27 @@ class TibberUploader:
         return response.json()
 
     def extract_meter_info(self, account_info):
-        homes = account_info['data']['me']['homes']
-        meters_items = account_info['data']['me']['meters']['items']
+        if not account_info or 'data' not in account_info:
+            raise ValueError("Keine gültigen Account-Informationen erhalten.")
+
+        me = account_info['data'].get('me', {})
+        homes = me.get('homes', [])
+        meters_items = me.get('meters', {}).get('items', [])
+        
         for home in homes:
-            current_meter_id = home.get('currentMeter', {}).get('id')
-            if current_meter_id:
-                for item in meters_items:
-                    meter = item.get('meter')
-                    if meter and meter.get('id') == current_meter_id:
-                        self.meter_id = current_meter_id
-                        self.register_id = meter['registers'][0]['id']
-                        return
+            current_meter = home.get('currentMeter')
+            if current_meter:
+                current_meter_id = current_meter.get('id')
+                if current_meter_id:
+                    for item in meters_items:
+                        meter = item.get('meter')
+                        if meter and meter.get('id') == current_meter_id:
+                            self.meter_id = current_meter_id
+                            if 'registers' in meter and len(meter['registers']) > 0:
+                                self.register_id = meter['registers'][0]['id']
+                            if not self.register_id:
+                                raise ValueError("Kein gültiger Register-ID gefunden.")
+                            return
         raise ValueError("Konnte keine gültige meter_id oder register_id finden.")
 
     def upload_reading(self):
