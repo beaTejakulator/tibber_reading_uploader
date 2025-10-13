@@ -1,45 +1,30 @@
-# Verwenden Sie das Basisimage, das von der Build-Umgebung bereitgestellt wird
+# Basisimage vom Add-on Build-Umfeld
 ARG BUILD_FROM
-FROM $BUILD_FROM
+FROM ${BUILD_FROM}
 
-# Setzen Sie Umgebungsvariablen
+# Locale
 ENV LANG C.UTF-8
 
-# Installieren Sie notwendige Pakete und Werkzeuge, einschließlich Cronie anstelle von Cron
+# Systempakete (schlank gehalten)
 RUN apk add --no-cache \
-    udev \
-    curl \
     python3 \
     py3-pip \
-    gcc \
-    musl-dev \
-    python3-dev \
-    libffi-dev \
-    cronie
+    bash
 
-# Installieren Sie Python-Module aus der requirements.txt-Datei
-COPY requirements.txt /
-RUN pip3 install --no-cache-dir -r /requirements.txt
+# Python-Dependencies
+COPY requirements.txt /tmp/requirements.txt
+RUN pip3 install --no-cache-dir -r /tmp/requirements.txt \
+ && rm -f /tmp/requirements.txt
 
-# Installieren Sie Tempio für die Verwendung in Home Assistant Add-ons
-ARG TEMPIO_VERSION BUILD_ARCH
-RUN \
-    curl -sSLf -o /usr/bin/tempio \
-    "https://github.com/home-assistant/tempio/releases/download/${TEMPIO_VERSION}/tempio_${BUILD_ARCH}" \
-    && chmod a+x /usr/bin/tempio
+# App-Skripte
+COPY run.sh /run.sh
+RUN chmod a+x /run.sh
 
-# Kopieren Sie das rootfs-Verzeichnis in das Image
-COPY rootfs /
+# Python-App
+COPY usr/bin/ /usr/bin/
+RUN chmod a+x /usr/bin/*.py
 
-# Kopieren Sie die Cron-Job-Datei in den Container
-COPY mycron /etc/crontabs/root
+# s6-Services (Start & Finish)
+COPY rootfs/ /    # enthält /etc/services.d/tibber_reading_uploader/run + finish
 
-# Stellen Sie sicher, dass das Startskript ausführbar ist
-RUN chmod a+x /etc/services.d/tibber_reading_uploader/run
-
-# Stellen Sie sicher, dass das Endskript ausführbar ist
-RUN chmod a+x /etc/services.d/tibber_reading_uploader/finish
-
-# Führen Sie den Cron-Daemon aus
-CMD ["crond", "-n"]
-
+# Standard-Command – s6 kümmert sich um Services; keine extra CMD nötig
