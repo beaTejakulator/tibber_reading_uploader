@@ -1,23 +1,54 @@
 #!/usr/bin/with-contenv bashio
 # ==============================================================================
-# Startet den Tibber Uploader Service zu einer bestimmten Tageszeit
+# Startet den Tibber Uploader Service und terminiert sauber bis zur nächsten 01:00
 # ==============================================================================
 
-# Set environment variables from the add-on configuration
-export METER_SENSOR=$(bashio::config 'meter_sensor')
-export EMAIL=$(bashio::config 'email')
-export PASSWORD=$(bashio::config 'password')
+set -euo pipefail
 
-# Log the start time and environment variables
-echo "=================================================================================================="
-echo -e "################ \e[32mStarting Tibber Uploader service at $(date)\e[0m ################"
-echo "=================================================================================================="
+# --- Konfiguration aus dem Add-on übernehmen -----------------------------------
+export METER_SENSOR="$(bashio::config 'meter_sensor')"
+export TIBBER_TOKEN="$(bashio::config 'TIBBER_TOKEN')"
 
-# Starten Sie den Service
-python3 /usr/bin/main.py
+if [ -z "${TIBBER_TOKEN:-}" ]; then
+  bashio::log.error "TIBBER_TOKEN ist nicht gesetzt. Bitte im Add-on unter Optionen hinterlegen."
+  exit 1
+fi
 
-echo -e "\e[32mNächste Übermittlung um 01:00 Uhr\e[0m"
+bashio::log.info "=================================================================================================="
+bashio::log.info "################ Starting Tibber Uploader service at $(date) ################"
+bashio::log.info "=================================================================================================="
 
+# --- Funktion: bis zur nächsten lokalen 01:00 Uhr schlafen ---------------------
+sleep_until_next_0100() {
+  local secs
+  # Python rechnet die Sekunden bis zur nächsten 01:00 Uhr in der lokalen TZ aus.
+  secs="$(python3 - <<'PY'
+from datetime import datetime, timedelta
+now = datetime.now()
+target = now.replace(hour=1, minute=0, second=0, microsecond=0)
+if now >= target:
+    target += timedelta(days=1)
+print(int((target - now).total_seconds()))
+PY
+)"
+  # Sicherheitsnetz: mind. 1 Sekunde schlafen
+  if [ -z "$secs" ] || [ "$secs" -le 0 ]; then
+    secs=1
+  fi
+  bashio::log.info "Nächste Übermittlung um 01:00 Uhr (in ${secs}s)."
+  # s6-sleep akzeptiert Sekunden
+  s6-sleep "${secs}"
+}
 
-# Warten Sie bis 01:00 Uhr morgens
-s6-sleep $(($(date -d '01:00' +%s) - $(date +%s) + 24*3600))
+# --- Endlosschleife: jetzt ausführen, dann immer 01:00 -------------------------
+while true; do
+  # 1) Einmal ausführen
+  if python3 /usr/bin/main.py; then
+    bashio::log.info "✅ Upload abgeschlossen."
+  else
+    bashio::log.warning "⚠️ Upload meldete einen Fehler (siehe Log oben)."
+  fi
+
+  # 2) Bis zur nächsten 01:00 Uhr schlafen
+  sleep_until_next_0100
+done
