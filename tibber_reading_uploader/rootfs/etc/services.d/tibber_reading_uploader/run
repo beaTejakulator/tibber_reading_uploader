@@ -1,70 +1,23 @@
 #!/usr/bin/with-contenv bashio
 # ==============================================================================
-# Startet den Tibber Uploader Service und führt tägliche Uploads zur gewünschten Zeit aus
+# Startet den Tibber Uploader Service zu einer bestimmten Tageszeit
 # ==============================================================================
 
-set -euo pipefail
+# Set environment variables from the add-on configuration
+export METER_SENSOR=$(bashio::config 'meter_sensor')
+export EMAIL=$(bashio::config 'email')
+export PASSWORD=$(bashio::config 'password')
 
-# --- Optionen laden -------------------------------------------------------------
-export TIBBER_TOKEN="$(bashio::config 'TIBBER_TOKEN')"
-export METER_SENSOR="$(bashio::config 'METER_SENSOR')"
-UPLOAD_TIME="$(bashio::config 'UPLOAD_TIME')"
-export HOME_ID="$(bashio::config 'HOME_ID')"
-export METER_ID="$(bashio::config 'METER_ID')"
-export REGISTER_ID="$(bashio::config 'REGISTER_ID')"
+# Log the start time and environment variables
+echo "=================================================================================================="
+echo -e "################ \e[32mStarting Tibber Uploader service at $(date)\e[0m ################"
+echo "=================================================================================================="
 
-if [ -z "${TIBBER_TOKEN:-}" ]; then
-  bashio::log.error "TIBBER_TOKEN ist nicht gesetzt. Bitte in den Add-on-Optionen hinterlegen."
-  exit 1
-fi
-if [ -z "${METER_SENSOR:-}" ]; then
-  bashio::log.error "METER_SENSOR ist nicht gesetzt (z. B. sensor.stromzaehler_kwh)."
-  exit 1
-fi
-if [ -z "${UPLOAD_TIME:-}" ]; then
-  UPLOAD_TIME="01:00"
-fi
+# Starten Sie den Service
+python3 /usr/bin/main.py
 
-bashio::log.info "=================================================================================================="
-bashio::log.info "################ Starting Tibber Uploader service at $(date) ################"
-bashio::log.info "=================================================================================================="
-bashio::log.info "Upload-Time: ${UPLOAD_TIME}, Sensor: ${METER_SENSOR}"
+echo -e "\e[32mNächste Übermittlung um 01:00 Uhr\e[0m"
 
-# --- Helper: Sekunden bis zur nächsten Uhrzeit (lokale TZ) ---------------------
-secs_until_time() {
-  local target="$1"
-  python3 - "$target" <<'PY'
-import sys
-from datetime import datetime, timedelta
-hhmm = sys.argv[1]
-hour, minute = map(int, hhmm.split(':'))
-now = datetime.now()
-target = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
-if now >= target:
-    target += timedelta(days=1)
-print(int((target - now).total_seconds()))
-PY
-}
 
-sleep_until_upload() {
-  local secs
-  secs="$(secs_until_time "${UPLOAD_TIME}")"
-  if [ -z "$secs" ] || [ "$secs" -le 0 ]; then
-    secs=1
-  fi
-  bashio::log.info "Nächster Upload um ${UPLOAD_TIME} (in ${secs}s)."
-  s6-sleep "${secs}"
-}
-
-# --- Main-Loop -----------------------------------------------------------------
-while true; do
-  # Warten bis Uploadzeit
-  sleep_until_upload
-
-  # Upload ausführen
-  if python3 /usr/bin/main.py; then
-    bashio::log.info "✅ Upload abgeschlossen: $(date)"
-  else
-    bashio::log.warning "⚠️ Upload fehlgeschlagen (siehe Log oben)."
-  fi
-done
+# Warten Sie bis 01:00 Uhr morgens
+s6-sleep $(($(date -d '01:00' +%s) - $(date +%s) + 24*3600))
