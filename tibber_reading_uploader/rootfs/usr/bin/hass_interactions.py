@@ -1,26 +1,28 @@
-#!/usr/bin/env python3
-import os
 import requests
 
-class HassInteractions:
-    def __init__(self):
-        self.supervisor_token = os.getenv("SUPERVISOR_TOKEN")
-        self.base_url = "http://supervisor/core/api"
-        if not self.supervisor_token:
-            raise RuntimeError("SUPERVISOR_TOKEN nicht verfügbar – läuft das als Add-on?")
+class HASSInteractions:
+    def __init__(self, supervisor_token: str):
+        self.supervisor_token = supervisor_token
+        self.headers = {
+            "Authorization": f"Bearer {self.supervisor_token}",
+            "Content-Type": "application/json",
+        }
+        self.hass_url = "http://supervisor/core/api/states/"
 
-    def get_meter_reading(self, entity_id: str) -> float:
-        url = f"{self.base_url}/states/{entity_id}"
-        headers = {"Authorization": f"Bearer {self.supervisor_token}"}
-        r = requests.get(url, headers=headers, timeout=30)
-        r.raise_for_status()
-        data = r.json()
-        state = data.get("state")
-        if state in (None, "unknown", "unavailable", ""):
-            raise ValueError(f"Entity {entity_id} hat keinen gültigen State: {state}")
-        return float(state)
+    def get_state(self, entity_id: str) -> str:
+        """Retrieve the state of a given entity from Home Assistant."""
+        response = requests.get(f"{self.hass_url}{entity_id}", headers=self.headers)
+        response.raise_for_status()
+        return response.json().get('state', '')
 
-    def get_reading_date_iso(self) -> str:
-        from datetime import datetime, timezone
-        dt = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-        return dt.isoformat().replace("+00:00", "Z")
+    def get_reading_date(self) -> str:
+        """Get the current date and time from Home Assistant."""
+        return self.get_state('sensor.date_time')
+    
+    def get_meter_reading(self, meter_sensor: str) -> float:
+        """Get the meter reading from a specified sensor."""
+        meter_reading = self.get_state(meter_sensor)
+        try:
+            return float(meter_reading)
+        except ValueError:
+            raise ValueError(f"Invalid meter reading value: {meter_reading}")
