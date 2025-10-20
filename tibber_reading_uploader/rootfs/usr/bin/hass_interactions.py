@@ -1,5 +1,6 @@
 import requests
 
+
 class HASSInteractions:
     def __init__(self, supervisor_token: str):
         self.supervisor_token = supervisor_token
@@ -11,14 +12,20 @@ class HASSInteractions:
 
     def get_state(self, entity_id: str) -> str:
         """Retrieve the state of a given entity from Home Assistant."""
-        response = requests.get(f"{self.hass_url}{entity_id}", headers=self.headers)
+        response = requests.get(
+            f"{self.hass_url}{entity_id}",
+            headers=self.headers,
+        )
         response.raise_for_status()
         return response.json().get('state', '')
 
     def get_reading_date(self) -> str:
-        """Get the current date and time from Home Assistant."""
-        return self.get_state('sensor.date_time')
-    
+        """Get the current date from Home Assistant."""
+        # The Tibber API expects ``YYYY-MM-DD``. ``sensor.date`` provides this
+        # value, while ``sensor.date_time`` also includes the time and would
+        # break the request.
+        return self.get_state("sensor.date")
+
     def get_meter_reading(self, meter_sensor: str) -> float:
         """Get the meter reading from a specified sensor."""
         meter_reading = self.get_state(meter_sensor)
